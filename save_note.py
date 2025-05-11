@@ -5,7 +5,6 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Lê o token do Dropbox da variável de ambiente
 DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN")
 DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload"
 
@@ -17,7 +16,6 @@ def save_note():
     date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
     content = data.get("content", "")
 
-    # Cria nome do ficheiro no formato 2025-05-11_Insight_da_manhã.md
     filename = f"{date}_{title}.md"
     dropbox_path = f"/{filename}"
 
@@ -28,19 +26,35 @@ def save_note():
     }
 
     try:
-        response = requests.post(DROPBOX_UPLOAD_URL, headers=headers, data=content.encode("utf-8"))
+        response = requests.post(
+            DROPBOX_UPLOAD_URL,
+            headers=headers,
+            data=content.encode("utf-8")
+        )
+
         if response.status_code == 200:
-            return jsonify({"status": "success", "file": filename}), 200
+            return jsonify({
+                "status": "success",
+                "file": filename
+            }), 200
         else:
-	    return jsonify({"status": "error","dropbox_status": response.status_code,"dropbox_error": response.text,"dropbox_headers": dict(response.headers)}), 500
+            return jsonify({
+                "status": "error",
+                "dropbox_status": response.status_code,
+                "dropbox_error": response.text,
+                "dropbox_headers": dict(response.headers)
+            }), 500
+
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({
+            "status": "error",
+            "exception": str(e)
+        }), 500
 
 @app.route("/", methods=["GET"])
 def home():
     return "📝 Save Note API with Dropbox is running!"
 
-# Corre com as definições corretas para Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
