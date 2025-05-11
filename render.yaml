@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: save-note-api
+    env: python
+    buildCommand: ""
+    startCommand: python save_note.py
+    plan: free
