@@ -32,7 +32,7 @@ def save_note():
         if response.status_code == 200:
             return jsonify({"status": "success", "file": filename}), 200
         else:
-            return jsonify({"status": "error", "dropbox_error": response.text}), 500
+	    return jsonify({"status": "error","dropbox_status": response.status_code,"dropbox_error": response.text,"dropbox_headers": dict(response.headers)}), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
