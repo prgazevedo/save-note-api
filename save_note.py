@@ -4,10 +4,35 @@ from dotenv import load_dotenv
 import requests
 import datetime
 
+# Load .env
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 load_dotenv(dotenv_path=env_path)
-ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 
+# Credentials from env
+APP_KEY = os.getenv("DROPBOX_APP_KEY")
+APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
+
+# Refresh token to get access token
+def get_access_token():
+    url = "https://api.dropboxapi.com/oauth2/token"
+    headers = { "Content-Type": "application/x-www-form-urlencoded" }
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
+        "client_id": APP_KEY,
+        "client_secret": APP_SECRET
+    }
+    r = requests.post(url, headers=headers, data=data)
+    if r.status_code == 200:
+        token = r.json()["access_token"]
+        print("🔐 Novo access token obtido.")
+        return token
+    else:
+        print("❌ Erro ao obter access token:", r.text)
+        return None
+
+# Setup Flask
 app = Flask(__name__)
 
 @app.route("/save_note", methods=["POST"])
@@ -19,12 +44,13 @@ def save_note():
 
     filename = f"{date}_{title}.md"
     dropbox_path = f"/{filename}"
+    access_token = get_access_token()
 
-    print(f"📄 File: {dropbox_path}")
-    print(f"🔐 Using access token: {ACCESS_TOKEN[:20]}...")
+    if not access_token:
+        return jsonify({"status": "error", "reason": "Failed to get access token"}), 500
 
     headers = {
-        "Authorization": f"Bearer {ACCESS_TOKEN}",
+        "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/octet-stream",
         "Dropbox-API-Arg": f'{{"path": "{dropbox_path}", "mode": "overwrite", "autorename": false, "mute": false}}'
     }
@@ -41,5 +67,5 @@ def save_note():
         }), 500
 
 if __name__ == "__main__":
-    print("🚀 Starting SaveNote API with static access token...")
+    print("🚀 Running SaveNote with refresh token flow...")
     app.run(debug=True)
