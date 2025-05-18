@@ -1,14 +1,20 @@
 import os
 import requests
 from flask import Flask, request, jsonify
-from dotenv import load_dotenv
 from datetime import datetime
 
-load_dotenv()
+# Load .env locally only
+if os.getenv("ENV") != "production":
+    from dotenv import load_dotenv
+    load_dotenv()
 
+# Optional: debug print (can be commented out)
 APP_KEY = os.getenv("DROPBOX_APP_KEY")
 APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
 REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
+print("🔍 DROPBOX_APP_KEY:", APP_KEY)
+print("🔐 DROPBOX_APP_SECRET:", APP_SECRET[:4], "... (len:", len(APP_SECRET), ")")
+print("🔄 DROPBOX_REFRESH_TOKEN:", REFRESH_TOKEN[:5], "... (len:", len(REFRESH_TOKEN), ")")
 
 def get_access_token():
     print("🔁 Refreshing access token...")
@@ -69,5 +75,14 @@ def save_note():
     return jsonify(result)
 
 if __name__ == "__main__":
-    print("🚀 Starting SaveNote API with refresh token...")
-    app.run(debug=True)
+    print("🚀 Starting SaveNote API...")
+
+    # Force a token refresh at startup to test
+    token = get_access_token()
+    if token:
+        print("✅ Token refresh test succeeded at startup.")
+    else:
+        print("❌ Token refresh test failed at startup.")
+
+    port = int(os.environ.get("PORT", 5000))  # Render will inject PORT
+    app.run(host="0.0.0.0", port=port, debug=True)
