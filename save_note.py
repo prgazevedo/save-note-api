@@ -40,7 +40,8 @@ def sanitize_filename(title):
 
 def upload_note_to_dropbox(title, date, content):
     filename = f"{date}_{sanitize_filename(title)}.md"
-    dropbox_path = f"/{filename}"
+    subfolder = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+    dropbox_path = f"/Apps/SaveNotesGPT/NotesKB/{subfolder}/{filename}"
     access_token = get_access_token()
     if not access_token:
         return {"status": "error", "dropbox_error": "Could not refresh token"}
@@ -60,6 +61,7 @@ def upload_note_to_dropbox(title, date, content):
         "dropbox_error": response.text if response.status_code != 200 else None,
         "file": filename if response.status_code == 200 else None
     }
+
 
 app = Flask(__name__)
 
