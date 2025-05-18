@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "SaveNotesGPT",
+  "name_for_model": "save_note_to_dropbox",
+  "description_for_human": "Archive notes and documents into Dropbox via Markdown using GPT.",
+  "description_for_model": "Use this tool to archive structured Markdown notes to Dropbox. Requires title, date, and Markdown content.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://save-note-api.onrender.com/openapi.json"
+  },
+  "logo_url": "https://save-note-api.onrender.com/logo.png",
+  "contact_email": "pedro@example.com",
+  "legal_info_url": "https://save-note-api.onrender.com/legal"
+}

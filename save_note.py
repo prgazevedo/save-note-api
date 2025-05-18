@@ -67,24 +67,53 @@ app = Flask(__name__)
 
 @app.route("/save_note", methods=["POST"])
 def save_note():
-    data = request.get_json()
-    title = data.get("title")
-    date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
-    content = data.get("content")
-    if not title or not content:
-        return jsonify({"status": "error", "message": "Missing title or content"}), 400
-    result = upload_note_to_dropbox(title, date, content)
-    return jsonify(result)
+    try:
+        data = request.get_json()
+        print("🔽 Incoming data:", data)
+
+        title = data.get("title")
+        date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+        content = data.get("content")
+
+        if not title or not content:
+            return jsonify({"status": "error", "message": "Missing title or content"}), 400
+
+        result = upload_note_to_dropbox(title, date, content)
+        return jsonify(result)
+
+    except Exception as e:
+        print("❌ Exception in save_note:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print("❌ Uncaught exception:", str(e))
+    return jsonify({
+        "status": "error",
+        "message": str(e)
+    }), 500
+
+
+@app.route("/openapi.json")
+def serve_openapi():
+    with open("openapi.json") as f:
+        return f.read(), 200, {"Content-Type": "application/json"}
+
+
+@app.route("/ai-plugin.json")
+def serve_plugin_manifest():
+    with open("ai-plugin.json") as f:
+        return f.read(), 200, {"Content-Type": "application/json"}
+
 
 if __name__ == "__main__":
     print("🚀 Starting SaveNote API...")
-
-    # Force a token refresh at startup to test
     token = get_access_token()
     if token:
-        print("✅ Token refresh test succeeded at startup.")
+        print("✅ Token refresh test succeeded.")
     else:
-        print("❌ Token refresh test failed at startup.")
+        print("❌ Token refresh test failed.")
 
-    port = int(os.environ.get("PORT", 5000))  # Render will inject PORT
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
