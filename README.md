@@ -166,3 +166,16 @@ SaveNotes/
 - [ ] Local index viewer (Craft, Obsidian plugin?)
 - [ ] Setup backup + Git auto-commit of notes
 - [ ] Allow GPT to fetch from Dropbox via signed URL (temporary, secure)
+---
+
+## 🔐 Privacy Policy
+
+This application does **not** collect or store any user data.
+
+- All content sent to the `/save_note` endpoint is processed immediately and archived to your **own Dropbox account**.
+- No analytics, tracking, or third-party cookies are used.
+- The GPT-based archiving flow does not retain your data beyond the current session.
+
+If you use the SaveNotesGPT or Jarbas GPT integration, all data is ephemeral unless saved by you to Dropbox.
+
+
