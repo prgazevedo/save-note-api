@@ -54,20 +54,18 @@ To create a **fluid, semi-automated workflow** where raw, expressive content (li
    - Structured with title, date, tags, body, and metadata (future-proof).  
    - Example:
      ```markdown
-    ---
-title: Morning Note
-date: 2025-05-17
-tags: [note, text]
-source: gpt-freud
-type: text
-author: pedro.azevedo
-uid: generated_uid
-linked_files: []
-status: processed
-language: pt
-summary: >
-  Morning Notes
----
+   title: Morning Note
+   date: 2025-05-17
+   tags: [note, text]
+   source: gpt-freud
+   type: text
+   author: pedro.azevedo
+   uid: generated_uid
+   linked_files: []
+   status: processed
+   language: pt
+   summary: > Morning Notes
+
      ```
 
 2. **Send via API**  
