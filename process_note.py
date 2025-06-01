@@ -22,7 +22,8 @@ def handle_process_note():
             return jsonify({"status": "error", "message": f"File '{filename}' not found in Dropbox"}), 404
 
         # Construct YAML frontmatter
-        yaml_block = utils.build_yaml_block(yaml_fields)
+        yaml_block = utils.generate_yaml_front_matter(yaml_fields)
+
 
         # Combine YAML and original content
         structured_note = f"{yaml_block}\n\n{original_md.strip()}"

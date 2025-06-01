@@ -56,3 +56,15 @@ def append_metadata_to_content(content: str, metadata: dict) -> str:
     """
     yaml_block = generate_yaml_front_matter(metadata)
     return f"{yaml_block}\n\n{content.strip()}"
+
+def sanitize_filename(title):
+    """
+    Converts a title to a filename-safe string.
+    """
+    return (
+        title.strip()
+        .lower()
+        .replace(" ", "_")
+        .replace(":", "-")
+        .replace("/", "-")
+    )
