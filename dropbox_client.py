@@ -44,7 +44,7 @@ def download_note_from_dropbox(filename: str, folder: str = "2025-06") -> str:
     Downloads the content of a Markdown note file from Dropbox.
     """
     access_token = get_access_token()
-    path = f"/NotesKB/{folder}/{filename}"
+    path = f"/Apps/SaveNotesGPT/{folder}/{filename}" 
 
     headers = {
         "Authorization": f"Bearer {access_token}",
