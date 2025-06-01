@@ -16,9 +16,8 @@ def handle_process_note():
             return jsonify({"status": "error", "message": "Missing filename or YAML metadata"}), 400
 
         # Fetch original content from Dropbox
-        # Extract YYYY-MM from filename
-        folder = filename.split("_")[0][:7]
-        original_md = dropbox_client.download_note_from_dropbox(filename, folder)
+        original_md = dropbox_client.download_note_from_dropbox(filename, folder="Inbox")
+
         if not original_md:
             return jsonify({"status": "error", "message": f"File '{filename}' not found in Dropbox"}), 404
 
