@@ -1,19 +1,16 @@
 import requests
 import os
+from datetime import datetime
+from utils import sanitize_filename
 
-# You may already have this in your environment or init code
 DROPBOX_API_CONTENT_URL = "https://content.dropboxapi.com/2/files"
 DROPBOX_API_ARG_HEADER = "Dropbox-API-Arg"
 DROPBOX_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 
 def get_access_token():
-    # In production use refresh token flow
     return DROPBOX_TOKEN
 
 def download_note(filename):
-    """
-    Downloads a file from Dropbox by filename from the default NotesKB structure.
-    """
     access_token = get_access_token()
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -28,9 +25,6 @@ def download_note(filename):
         return None
 
 def upload_structured_note(path, content):
-    """
-    Uploads a note to Dropbox at the specified path with overwrite mode.
-    """
     access_token = get_access_token()
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -44,3 +38,9 @@ def upload_structured_note(path, content):
         "dropbox_status": response.status_code,
         "dropbox_error": response.text if response.status_code != 200 else None
     }
+
+def upload_note_to_dropbox(title, date, content):
+    filename = f"{date}_{sanitize_filename(title)}.md"
+    subfolder = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
+    dropbox_path = f"/Apps/SaveNotesGPT/NotesKB/{subfolder}/{filename}"
+    return upload_structured_note(dropbox_path, content)
