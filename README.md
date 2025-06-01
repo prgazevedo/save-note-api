@@ -1,181 +1,167 @@
-# 🧠 SaveNotesGPT — A Personal Insight Capture System
+# 🧠 SaveNotesGPT — A Semantic Personal Knowledge System
 
-SaveNotesGPT is a lightweight, extensible system for converting handwritten notes, personal journaling, and daily reflections into structured Markdown insights — using OCR and GPT processing — and storing them safely in Dropbox, with minimal overhead and maximum semantic clarity.
+**SaveNotesGPT** is a lightweight, extensible platform for converting handwritten notes, daily entries, and research logs into structured, metadata-rich Markdown files. These notes are safely archived in Dropbox and semantically indexed using GPT — forming a durable, searchable personal knowledge base.
 
-This project is part of a broader effort to build a **Personal Knowledge Infrastructure**, designed for long-term self-understanding, reflection, and synthesis.
-
----
-
-## 🚀 Project Vision
-
-To create a **fluid, semi-automated workflow** where raw, expressive content (like morning pages, dreams, work notes, or personal reflections) can be:
-
-1. **Captured** via handwriting or text  
-2. **Processed** by GPT (e.g., insight extraction, thematic tagging)  
-3. **Structured** into clean, timestamped Markdown files  
-4. **Archived** to a Dropbox folder, accessible across devices
-
-> This is not just about saving notes. It's about **distilling symbolic meaning** over time, and preserving a living archive of thought.
-
----
-## 🔄 Information Flows in SaveNotesGPT
-
-### 🧭 1. **Input Flow → ChatGPT → Analysis**
-
-**Goal:** Bring personal or work notes (especially handwritten Morning Pages) into ChatGPT for reflection and structured insight extraction.
-
-#### 🔁 Steps:
-1. **Manual or digital note creation**  
-   - Morning Pages written by hand.  
-   - Work notes written in notebooks or digital tools.
-
-2. **Capture and upload**  
-   - Photos taken with iPad Mini.  
-   - Uploaded to ChatGPT as images or scanned PDFs.  
-   - OCR happens either before upload (using iOS or Notes app) or during processing.
-
-3. **Processing and insight generation in ChatGPT (via GPT-Freud)**  
-   - ChatGPT reads, interprets symbolically or reflectively.  
-   - Outputs a clean **Markdown insight note** with structure and date.
-
-4. **Export to filesystem (automated)**  
-   - Via `save_note.py` Flask API.  
-   - Triggered by a cURL request or future automation.  
-   - Note is saved as `.md` in Dropbox → synced to iCloud via Hazel or manually.
+This project is part of a broader **Personal Knowledge Infrastructure**, built to support long-term memory, reflection, and insight retrieval across platforms like Obsidian, Craft, and ChatGPT.
 
 ---
 
-### 📤 2. **Output Flow (GPT → Knowledge Base / Indexing)**
+## 🚀 Vision
 
-**Goal:** Turn GPT-generated insights into persistent and searchable knowledge base entries.
+Enable a fluid pipeline where:
 
-#### 🔁 Steps:
-1. **Markdown content generation**  
-   - Structured with title, date, tags, body, and metadata (future-proof).  
-   - Example:
-     ```markdown
-   title: Morning Note
-   date: 2025-05-17
-   tags: [note, text]
-   source: gpt-freud
-   type: text
-   author: pedro.azevedo
-   uid: generated_uid
-   linked_files: []
-   status: processed
-   language: pt
-   summary: > Morning Notes
-
-     ```
-
-2. **Send via API**  
-   - POST request to `https://save-note-api.onrender.com/save_note`.  
-   - Can be triggered by user manually or via SwiftBar/Shortcuts automation.
-
-3. **Secure Dropbox storage**  
-   - File saved to configured Dropbox folder using API.  
-   - Named by date and title (`2025-05-17_Reflections.md`).  
-   - Synced to iCloud folder or backup device.
-
-4. **(Optional) Future indexing**  
-   - Add tag system, backlinking, daily/weekly index generation.  
-   - Organize by theme: personal growth vs. work notes.
+1. Notes are written in any format — by hand or typed  
+2. GPT structures them with metadata, tags, summaries  
+3. They are saved in Markdown with standard YAML frontmatter  
+4. Archived in Dropbox under date-based folders  
+5. Queried later using GPT or Obsidian-style tools
 
 ---
 
----
+## 📡 System Overview
 
-## ✍️ Use Cases
-
-### 1. Morning Pages → GPT-Freud → Markdown
-- You handwrite 3 morning pages.
-- You take 3 photos (iPad/phone).
-- Upload to ChatGPT with GPT-Freud persona.
-- Insight is extracted and saved to Dropbox in Markdown format, tagged with date and themes.
-
-### 2. Work Notes, Research, Strategy Logs
-- Typed or handwritten work reflections are uploaded.
-- GPT assists in extracting themes, highlights, or summaries.
-- Saved as timestamped Markdown files, organized by topic or role.
-- Eventually forms a searchable knowledge base.
+| Component            | Description                                         |
+|----------------------|-----------------------------------------------------|
+| **Capture**          | Daily logs, work notes, research snippets           |
+| **Processing**       | GPT-generated metadata + summary                    |
+| **API Backend**      | Flask microservice on Render                        |
+| **Storage**          | Dropbox with date-based folders                     |
+| **Format**           | Markdown `.md` with Obsidian/Craft-compatible YAML |
+| **Semantic Layer**   | Embeddings + GPT vector search (planned)            |
 
 ---
 
-## 🧰 Technology Stack
+## 🔄 Current Flows
 
-| Component        | Role                         | Tool Used        |
-|------------------|------------------------------|------------------|
-| Input            | Handwritten notes            | iPad Camera / Files app |
-| Processing       | Insight extraction            | ChatGPT (local or plugin) |
-| Backend API      | Accepts note upload           | `save_note.py` (Flask) |
-| Hosting          | Lightweight server            | [Render.com](https://render.com) |
-| Storage          | File sync + access            | Dropbox |
-| Archival Format  | Portable & editable notes     | Markdown `.md` |
-| Auth             | Token via Dropbox API         | OAuth2 + refresh tokens |
-| Virtualization   | Dev environment               | Python venv |
-| Logging          | Inline curl + server printout | Flask debug |
+### 📥 1. Structured Note Upload
+
+```json
+POST /save_note
+{
+  "content": "---\ntitle: Work Log – Backend Refactor\ndate: 2025-06-01\ntags: [work, backend, refactor]\nauthor: pedro.azevedo\nsource: gpt\ntype: text\nuid: work-refactor-20250601\nstatus: processed\nlinked_files: []\nlanguage: en\nsummary: >\n  Refactoring backend modular structure for note processing API.\n---\n\n# Backend Refactor Log\n\nToday I finalized the modular restructure of the Flask API..."
+}
+```
+
+- Stored at:  
+  `/Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-01_Work_Log_Backend_Refactor.md`
+
+---
+
+### 📂 2. Folder Navigation (via API)
+
+- `GET /list_kb` → returns: `["2025-05", "2025-06"]`
+- `GET /list_kb_folder?folder=2025-06` → lists all `.md` files in the folder
+- `GET /get_kb_note?filename=...` → returns raw Markdown
+
+---
+
+### 🧠 3. GPT-Based Metadata Injection
+
+```json
+POST /process_note
+{
+  "filename": "2025-06-01_work_log.md",
+  "yaml": {
+    "title": "Work Log – Backend Refactor",
+    "date": "2025-06-01",
+    "tags": ["work", "backend", "refactor"],
+    "author": "pedro.azevedo",
+    "source": "gpt",
+    "type": "text",
+    "uid": "work-refactor-20250601",
+    "status": "processed",
+    "linked_files": [],
+    "language": "en",
+    "summary": "Refactoring backend modular structure for note processing API."
+  }
+}
+```
+
+- Flask reads the file, constructs YAML, prepends it, and saves the structured note to `/NotesKB/YYYY-MM/`.
+
+---
+
+## 🧰 Stack
+
+| Layer         | Tool / Service               |
+|---------------|------------------------------|
+| **Backend**   | Flask (Python)               |
+| **Deployment**| Render.com                   |
+| **Storage**   | Dropbox (OAuth2 Refresh)     |
+| **Client**    | ChatGPT (Custom GPT)         |
+| **Integration** | Craft, Obsidian            |
+| **Language**  | Markdown `.md`               |
+
+---
+
+## 🧩 Compatibility
+
+| Tool      | Compatibility            | Notes                                  |
+|-----------|--------------------------|----------------------------------------|
+| **Craft** | ✅ Accepts Markdown        | May display YAML as plain text         |
+| **Obsidian** | ✅ Full YAML + backlinks | Ideal for queries, dataview, templates |
+| **Custom GPT** | ✅ Can read/process notes | Calls API directly                     |
 
 ---
 
 ## 🧪 Status
 
-| Feature                      | Status     |
-|------------------------------|------------|
-| Dropbox API Upload           | ✅ Working |
-| Refresh Token Flow (Render)  | ✅ Working |
-| GPT Insight-to-Markdown Flow | ✅ Manual, GPT-assisted |
-| OCR Image to Insight         | 🔜 Planned |
-| Auto Tagging or Theming      | 🟡 Manual |
-| Folder Structure Support     | 🔜 Not implemented |
-| Semantic Archive Browser     | 🔜 Optional (Obsidian, Craft) |
+| Feature                              | State     |
+|--------------------------------------|-----------|
+| Dropbox API File Upload              | ✅ Stable |
+| GPT to Markdown Structuring Flow     | ✅ Manual |
+| GPT Metadata Injection (`/process_note`) | ✅ Working |
+| Obsidian/Craft Metadata Compatibility| ✅ Working |
+| File Browser APIs (`/list_kb`, etc.) | ✅ Working |
+| Embedding + Semantic Search          | 🔜 Planned |
+| Batch GPT Processing Queue           | 🔜 Planned |
 
 ---
 
-
-## 🧩 Open Questions
-
-- Should this connect to Obsidian, Craft, or stay Markdown-native?
-- Should image-to-text (OCR) and GPT pipeline be automated via webhook?
-- Should saved notes be indexed in SQLite or a static site?
-- Can GPT suggest semantic tags or surface links across entries?
-
-
----
-
-## 📁 Directory Structure
+## 📁 Dropbox Layout
 
 ```
-SaveNotes/
-├── save_note.py              # Flask app (Render-compatible)
-├── get_refresh_token.py      # Auth setup for one-time refresh token
-├── refresh_access_token.py   # Manual access token regeneration (if needed)
-├── get_new_refresh_token.py  # Uses .env for safe rotation
-├── test_env.py               # Env var sanity check
-├── requirements.txt          # Flask + dotenv + requests
-├── render.yaml               # Render deployment configuration
-├── .env                      # 🔐 NEVER COMMIT — contains secrets
-├── README.md                 # This file
+Dropbox/
+└── Apps/
+    └── SaveNotesGPT/
+        └── NotesKB/
+            ├── 2025-05/
+            │   └── 2025-05-17_Work_Log_API_Tests.md
+            └── 2025-06/
+                ├── 2025-06-01_work_log.md
+                └── 2025-06-01_test_upload.md
 ```
 
 ---
 
-## ✅ To Do Next
+## 🧭 Future Roadmap
 
-- [ ] Automate GPT ↔ Markdown feedback loop
-- [ ] Auto OCR integration (iOS Shortcut?)
-- [ ] Local index viewer (Craft, Obsidian plugin?)
-- [ ] Setup backup + Git auto-commit of notes
-- [ ] Allow GPT to fetch from Dropbox via signed URL (temporary, secure)
+- [ ] `GET /list_inbox_notes` to find unprocessed files
+- [ ] GPT-assisted batch processing via `/process_note`
+- [ ] Embed notes into vector DB for GPT-powered semantic search
+- [ ] SwiftBar/iOS Shortcuts integrations for upload
+
 ---
 
-## 🔐 Privacy Policy
+## 🔐 Privacy
 
-This application does **not** collect or store any user data.
+No user data is retained.  
+- Notes are sent only to Dropbox.  
+- No server-side storage or tracking.  
+- GPT only reads/transforms content at your request.
 
-- All content sent to the `/save_note` endpoint is processed immediately and archived to your **own Dropbox account**.
-- No analytics, tracking, or third-party cookies are used.
-- The GPT-based archiving flow does not retain your data beyond the current session.
+---
 
-If you use the SaveNotesGPT or Jarbas GPT integration, all data is ephemeral unless saved by you to Dropbox.
+## 📜 License
 
+MIT License — for personal use, reflection, and synthesis workflows.
 
+---
+
+## 🔖 Tag
+
+```
+v2.0.1-structured-pipeline-20250601
+```
+
+> Structure today. Retrieve tomorrow.
