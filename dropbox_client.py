@@ -37,6 +37,27 @@ def upload_note_to_dropbox(title, date, content):
     else:
         print("❌ Dropbox upload failed:", response.text)
         return False
+def download_note_from_dropbox(filename: str, folder: str = "2025-06") -> str:
+    """
+    Downloads the content of a Markdown note file from Dropbox.
+    """
+    access_token = get_access_token()
+    path = f"/NotesKB/{folder}/{filename}"
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Dropbox-API-Arg": json.dumps({"path": path}),
+    }
+
+    response = requests.post(
+        "https://content.dropboxapi.com/2/files/download",
+        headers=headers,
+    )
+
+    if response.status_code != 200:
+        raise Exception(f"Failed to download file: {response.text}")
+
+    return response.text
 
 def get_file_from_dropbox(filename, folder):
     access_token = get_access_token()
