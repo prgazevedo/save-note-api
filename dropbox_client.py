@@ -95,3 +95,28 @@ def list_folder(path):
     else:
         print("❌ Dropbox list_folder failed:", response.text)
         return []
+    
+def upload_structured_note(path: str, content: str) -> bool:
+    """
+    Uploads a structured Markdown note (already containing YAML) to Dropbox at the given full path.
+    """
+    access_token = get_access_token()
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/octet-stream",
+        "Dropbox-API-Arg": json.dumps({
+            "path": path,
+            "mode": "overwrite",
+            "autorename": False,
+            "mute": False
+        })
+    }
+
+    response = requests.post(DROPBOX_API_UPLOAD, headers=headers, data=content.encode("utf-8"))
+
+    if response.status_code == 200:
+        print(f"✅ Structured note uploaded to {path}")
+        return True
+    else:
+        print(f"❌ Upload failed: {response.text}")
+        return False
