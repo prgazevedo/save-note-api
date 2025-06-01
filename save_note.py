@@ -68,22 +68,40 @@ app = Flask(__name__)
 @app.route("/save_note", methods=["POST"])
 def save_note():
     try:
-        data = request.get_json()
-        print("🔽 Incoming data:", data)
+        if request.content_type.startswith("multipart/form-data"):
+            # Handle file upload
+            file = request.files.get("file")
+            if not file:
+                return jsonify({"status": "error", "message": "No file provided"}), 400
 
-        title = data.get("title")
-        date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
-        content = data.get("content")
+            content = file.read().decode("utf-8")
+            filename = file.filename
+            title = filename.rsplit(".", 1)[0]  # use name without .md
+            date = datetime.now().strftime("%Y-%m-%d")
 
-        if not title or not content:
-            return jsonify({"status": "error", "message": "Missing title or content"}), 400
+            print(f"📤 Received file: {filename}")
+            result = upload_note_to_dropbox(title, date, content)
+            return jsonify(result)
 
-        result = upload_note_to_dropbox(title, date, content)
-        return jsonify(result)
+        else:
+            # Handle raw JSON body
+            data = request.get_json()
+            print("🔽 Incoming JSON:", data)
+
+            title = data.get("title")
+            date = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+            content = data.get("content")
+
+            if not title or not content:
+                return jsonify({"status": "error", "message": "Missing title or content"}), 400
+
+            result = upload_note_to_dropbox(title, date, content)
+            return jsonify(result)
 
     except Exception as e:
         print("❌ Exception in save_note:", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 
 @app.errorhandler(Exception)
