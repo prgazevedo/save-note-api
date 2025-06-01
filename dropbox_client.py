@@ -1,46 +1,74 @@
-import requests
 import os
-from datetime import datetime
-from utils import sanitize_filename
+import requests
+from dotenv import load_dotenv
+from utils import get_access_token
 
-DROPBOX_API_CONTENT_URL = "https://content.dropboxapi.com/2/files"
-DROPBOX_API_ARG_HEADER = "Dropbox-API-Arg"
-DROPBOX_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+load_dotenv()
 
-def get_access_token():
-    return DROPBOX_TOKEN
+DROPBOX_API_UPLOAD = "https://content.dropboxapi.com/2/files/upload"
+DROPBOX_API_LIST_FOLDER = "https://api.dropboxapi.com/2/files/list_folder"
+DROPBOX_API_GET_FILE = "https://content.dropboxapi.com/2/files/download"
+DROPBOX_API_SAVE_FILE = "https://api.dropboxapi.com/2/files/save_url"
 
-def download_note(filename):
+BASE_DROPBOX_PATH = "/NotesKB"
+
+def upload_note_to_dropbox(title, date, content):
     access_token = get_access_token()
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        DROPBOX_API_ARG_HEADER: f"{{\"path\": \"/Apps/SaveNotesGPT/NotesKB/2025-06/{filename}\"}}"
-    }
-    url = f"{DROPBOX_API_CONTENT_URL}/download"
-    response = requests.post(url, headers=headers)
-    if response.status_code == 200:
-        return response.text
-    else:
-        print("❌ Dropbox download failed:", response.text)
-        return None
+    filename = f"{date}_{title.replace(' ', '_')}.md"
+    folder = f"{BASE_DROPBOX_PATH}/{date[:7]}"
+    dropbox_path = f"{folder}/{filename}"
 
-def upload_structured_note(path, content):
-    access_token = get_access_token()
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/octet-stream",
-        DROPBOX_API_ARG_HEADER: f"{{\"path\": \"{path}\", \"mode\": \"overwrite\"}}"
-    }
-    url = f"{DROPBOX_API_CONTENT_URL}/upload"
-    response = requests.post(url, headers=headers, data=content.encode("utf-8"))
-    return {
-        "status": "success" if response.status_code == 200 else "error",
-        "dropbox_status": response.status_code,
-        "dropbox_error": response.text if response.status_code != 200 else None
+        "Dropbox-API-Arg": str({
+            "path": dropbox_path,
+            "mode": "overwrite",
+            "mute": False,
+            "strict_conflict": False
+        }).replace("'", '\"')
     }
 
-def upload_note_to_dropbox(title, date, content):
-    filename = f"{date}_{sanitize_filename(title)}.md"
-    subfolder = datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m")
-    dropbox_path = f"/Apps/SaveNotesGPT/NotesKB/{subfolder}/{filename}"
-    return upload_structured_note(dropbox_path, content)
+    response = requests.post(DROPBOX_API_UPLOAD, headers=headers, data=content.encode('utf-8'))
+
+    if response.status_code == 200:
+        print(f"✅ Uploaded note to Dropbox at {dropbox_path}")
+        return True
+    else:
+        print("❌ Dropbox upload failed:", response.text)
+        return False
+
+def get_file_from_dropbox(filename, folder):
+    access_token = get_access_token()
+    path = f"{BASE_DROPBOX_PATH}/{folder}/{filename}"
+
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Dropbox-API-Arg": f"{{\"path\": \"{path}\"}}"
+    }
+
+    response = requests.post(DROPBOX_API_GET_FILE, headers=headers)
+
+    if response.status_code == 200:
+        return response.text
+    else:
+        print("❌ Dropbox file fetch failed:", response.text)
+        return None
+
+def list_folder(path):
+    access_token = get_access_token()
+    url = DROPBOX_API_LIST_FOLDER
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "path": path,
+        "recursive": False
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 200:
+        return [entry["name"] for entry in response.json().get("entries", [])]
+    else:
+        print("❌ Dropbox list_folder failed:", response.text)
+        return []
