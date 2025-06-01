@@ -2,7 +2,7 @@ from flask import Flask
 from routes.upload import upload_note
 from routes.list import list_kb, list_kb_folder
 from routes.download import get_kb_note
-from routes.process_note import process_note 
+from process_note import process_note 
 app = Flask(__name__)
 
 app.add_url_rule("/save_note", view_func=upload_note, methods=["POST"])
