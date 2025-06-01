@@ -37,6 +37,7 @@ def upload_note_to_dropbox(title, date, content):
     else:
         print("❌ Dropbox upload failed:", response.text)
         return False
+    
 def download_note_from_dropbox(filename: str, folder: str = "2025-06") -> str:
     """
     Downloads the content of a Markdown note file from Dropbox.
