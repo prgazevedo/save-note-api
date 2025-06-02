@@ -115,9 +115,12 @@ def list_folder(path):
         "path": path,
         "recursive": False
     }
+
     response = requests.post(url, headers=headers, json=data)
+
     if response.status_code == 200:
-        return [entry["name"] for entry in response.json().get("entries", [])]
+        return response.json().get("entries", [])
     else:
         print("❌ Dropbox list_folder failed:", response.text)
-        return []
+        return {"error": response.text}
+
