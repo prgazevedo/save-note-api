@@ -15,5 +15,5 @@ def list_kb_folder():
     result = list_folder(f"/Apps/SaveNotesGPT/NotesKB/{folder}")
     if isinstance(result, dict) and "error" in result:
         return jsonify({"status": "error", "message": result["error"]}), 500
-    files = [e["name"] for e in result.get("entries", []) if e[".tag"] == "file"]
+    files = [e["name"] for e in result if e.get(".tag") == "file"]
     return jsonify({"status": "success", "files": files})
