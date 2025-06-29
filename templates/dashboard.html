@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Admin Dashboard</h2>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">Log Out</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- 📁 Config Form -->
+    <div class="mb-5">
+      <h4>📁 Knowledge Base Configuration</h4>
+      <form method="POST" action="{{ url_for('admin.dashboard') }}">
+        <div class="mb-3">
+          <label for="kb_path" class="form-label">Base Knowledge Base Path</label>
+          <input id="kb_path" name="kb_path" class="form-control" value="{{ config.kb_path }}" required />
+        </div>
+
+        <div class="mb-3">
+          <label for="inbox_path" class="form-label">Inbox Folder Path</label>
+          <input id="inbox_path" name="inbox_path" class="form-control" value="{{ config.inbox_path }}" required />
+        </div>
+
+        <button type="submit" name="update" class="btn btn-primary">Update</button>
+      </form>
+    </div>
+
+    <!-- 📥 Scan Inbox Form -->
+    <div class="mb-5">
+      <h4>📥 Inbox Management</h4>
+      <form method="POST" action="{{ url_for('scan.scan_inbox') }}">
+        <button type="submit" name="scan_inbox" class="btn btn-outline-secondary">Scan Inbox</button>
+        {% if config.last_scan %}
+          <div class="form-text mt-2 text-muted">
+            Last scanned: <strong>{{ config.last_scan }}</strong>
+          </div>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- 📂 Recent Files -->
+    <div class="mb-5">
+      <h4>📂 Recently Processed Files</h4>
+      {% if files %}
+        <ul class="list-group">
+          {% for f in files %}
+            <li class="list-group-item">{{ f }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">No files found.</p>
+      {% endif %}
+    </div>
+
+    <!-- 📜 Logs -->
+    <div>
+      <h4>📜 Action Logs</h4>
+      {% if logs %}
+        <ul class="list-group">
+          {% for log in logs %}
+            <li class="list-group-item small">{{ log }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">No logs available.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

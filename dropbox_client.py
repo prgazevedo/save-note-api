@@ -2,7 +2,7 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
-from utils import get_access_token
+from utils.dropbox_utils import get_access_token
 
 load_dotenv()
 
@@ -15,7 +15,12 @@ BASE_DROPBOX_PATH = "/Apps/SaveNotesGPT"
 INBOX_PATH = f"{BASE_DROPBOX_PATH}/Inbox"
 NOTES_KB_PATH = f"{BASE_DROPBOX_PATH}/NotesKB"
 
+
 def upload_note_to_dropbox(title, date, content):
+    """
+    Uploads a Markdown file to Dropbox under the NotesKB/{YYYY-MM}/ directory.
+    Automatically builds the path from date and title.
+    """
     access_token = get_access_token()
     filename = f"{date}_{title.replace(' ', '_')}.md"
     subfolder = date[:7]
@@ -41,9 +46,11 @@ def upload_note_to_dropbox(title, date, content):
         print("❌ Dropbox upload failed:", response.text)
         return False
 
+
 def upload_structured_note(path: str, content: str) -> bool:
     """
-    Uploads a structured Markdown note (already containing YAML) to Dropbox at the given full path.
+    Uploads a structured Markdown note (already containing YAML front matter) to Dropbox at the given full path.
+    Example path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-29_Title.md
     """
     access_token = get_access_token()
 
@@ -67,10 +74,12 @@ def upload_structured_note(path: str, content: str) -> bool:
         print(f"❌ Upload failed: {response.text}")
         return False
 
+
 def download_note_from_dropbox(filename: str, folder: str = "Inbox") -> str:
     """
-    Downloads the content of a Markdown note file from Dropbox.
+    Downloads the content of a Markdown note from Dropbox.
     Defaults to the Inbox folder.
+    Returns raw Markdown content as a string.
     """
     access_token = get_access_token()
     path = f"{INBOX_PATH}/{filename}" if folder == "Inbox" else f"{NOTES_KB_PATH}/{folder}/{filename}"
@@ -87,7 +96,12 @@ def download_note_from_dropbox(filename: str, folder: str = "Inbox") -> str:
 
     return response.text
 
+
 def get_file_from_dropbox(filename, folder):
+    """
+    Alternative helper to download a file from NotesKB subfolder.
+    Returns the file content or None on failure.
+    """
     access_token = get_access_token()
     path = f"{NOTES_KB_PATH}/{folder}/{filename}"
 
@@ -104,9 +118,14 @@ def get_file_from_dropbox(filename, folder):
         print("❌ Dropbox file fetch failed:", response.text)
         return None
 
+
 def list_folder(path):
+    """
+    Lists files and folders inside the specified Dropbox path.
+    Raises Exception if the API call fails.
+    Returns a list of metadata entries.
+    """
     access_token = get_access_token()
-    url = DROPBOX_API_LIST_FOLDER
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
@@ -116,11 +135,9 @@ def list_folder(path):
         "recursive": False
     }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(DROPBOX_API_LIST_FOLDER, headers=headers, json=data)
 
     if response.status_code == 200:
         return response.json().get("entries", [])
     else:
-        print("❌ Dropbox list_folder failed:", response.text)
-        return {"error": response.text}
-
+        raise Exception(f"Dropbox list_folder failed: {response.text}")
