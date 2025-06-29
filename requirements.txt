@@ -1,4 +1,7 @@
 flask
+flask-login
+flask-wtf
 requests
 python-dotenv
 pyyaml
+openai
