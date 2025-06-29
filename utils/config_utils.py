@@ -5,15 +5,24 @@ BASE_DIR = "data"
 CONFIG_FILE = os.path.join(BASE_DIR, "admin_config.json")
 LOG_FILE = os.path.join(BASE_DIR, "admin_log.json")
 FILES_FILE = os.path.join(BASE_DIR, "last_files.json")
+DEFAULT_CONFIG = {
+    "kb_path": "/Apps/SaveNotesGPT/NotesKB",
+    "inbox_path": "/Apps/SaveNotesGPT/Inbox",
+    "last_scan": None
+}
 
 def ensure_data_dir():
     os.makedirs(BASE_DIR, exist_ok=True)
 
 def load_json(path, fallback):
+    ensure_data_dir()
     if os.path.exists(path):
         with open(path, "r") as f:
             return json.load(f)
-    return fallback
+    else:
+        # Auto-create the file with the fallback content
+        save_json(path, fallback)
+        return fallback
 
 def save_json(path, data):
     ensure_data_dir()
@@ -22,11 +31,7 @@ def save_json(path, data):
 
 # Shorthands for common ops
 def load_config():
-    return load_json(CONFIG_FILE, {
-        "kb_path": "/NotesKB",
-        "inbox_path": "/Inbox",
-        "last_scan": None
-    })
+    return load_json(CONFIG_FILE, DEFAULT_CONFIG)
 
 def save_config(config):
     save_json(CONFIG_FILE, config)

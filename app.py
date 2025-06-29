@@ -1,6 +1,7 @@
 import os
 from flask import Flask, redirect, url_for, jsonify
 from dotenv import load_dotenv
+from utils.config_utils import load_config, load_logs, load_last_files
 
 # Load .env if running locally (e.g., Codespaces)
 load_dotenv()
@@ -32,6 +33,12 @@ app.register_blueprint(process_note)  # /process_note
 app.register_blueprint(auth_bp)       # /login, /logout
 app.register_blueprint(admin_bp)      # /admin/dashboard
 app.register_blueprint(scan_bp)
+
+# Create initial files on app startup
+load_config()
+load_logs()
+load_last_files()
+
 # Health check route
 @app.route("/")
 def health_check():
