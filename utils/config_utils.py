@@ -17,12 +17,21 @@ def ensure_data_dir():
 def load_json(path, fallback):
     ensure_data_dir()
     if os.path.exists(path):
-        with open(path, "r") as f:
-            return json.load(f)
+        try:
+            with open(path, "r") as f:
+                content = f.read().strip()
+                if not content:
+                    raise ValueError("Empty file")
+                return json.loads(content)
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"⚠️ Warning: Failed to load JSON from {path} — {e}. Using fallback.")
+            save_json(path, fallback)
+            return fallback
     else:
         # Auto-create the file with the fallback content
         save_json(path, fallback)
         return fallback
+
 
 def save_json(path, data):
     ensure_data_dir()

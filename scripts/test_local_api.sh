@@ -15,14 +15,33 @@ fi
 echo "⚙️ Starting Flask..."
 FLASK_APP=app.py flask run > flask.log 2>&1 &
 FLASK_PID=$!
-sleep 2
 
-# 3. Wait until server is up
-until curl -s http://localhost:5000/ > /dev/null; do
+# 3. Wait until server is up, or fail if Flask exits
+TIMEOUT=10
+for i in $(seq 1 $TIMEOUT); do
+  if curl -s http://localhost:5000/ > /dev/null; then
+    echo "✅ Flask is up (PID $FLASK_PID)"
+    break
+  fi
+
+  if ! kill -0 $FLASK_PID 2>/dev/null; then
+    echo "❌ Flask failed to start. Check flask.log below:"
+    echo "------------------------------------------"
+    tail -n 40 flask.log
+    echo "------------------------------------------"
+    exit 1
+  fi
+
   sleep 1
 done
 
-echo "✅ Flask is up (PID $FLASK_PID)"
+# Timeout
+if ! kill -0 $FLASK_PID 2>/dev/null; then
+  echo "❌ Flask did not start in time. Aborting."
+  tail -n 40 flask.log
+  exit 1
+fi
+
 echo "📡 Testing endpoints..."
 
 # 4. Call endpoints
