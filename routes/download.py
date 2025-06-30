@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from dropbox_client import download_note_from_dropbox
+from services.dropbox_client import download_note_from_dropbox
 from datetime import datetime
 
 def get_kb_note():

@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from dropbox_client import upload_note_to_dropbox
+from services.dropbox_client import upload_note_to_dropbox
 
 def upload_note():
     try:

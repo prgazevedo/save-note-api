@@ -3,10 +3,10 @@
 from flask import Blueprint, jsonify, request
 from datetime import datetime, timezone
 from dateutil.parser import isoparse
-from dropbox_client import list_folder, download_note_from_dropbox
 from utils.config_utils import load_config, save_config, save_last_files
 from utils.logging_utils import log_event
-from process_note import process_raw_markdown
+from services.dropbox_client import list_folder, download_note_from_dropbox
+from services.process_note import process_raw_markdown
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 

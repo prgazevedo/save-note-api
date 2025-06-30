@@ -134,6 +134,40 @@ Dropbox/
 
 ---
 
+## 🔧 Local Development Setup
+
+> Use this if you're running the project locally or inside GitHub Codespaces.
+
+### 1. Clone the repository
+
+    git clone https://github.com/your-user/save-notes-api.git
+    cd save-notes-api
+
+### 2. Run setup script
+
+This creates a Python virtual environment, installs dependencies, generates the `.env`, and ensures required data files:
+
+    bash scripts/setup_dev.sh
+
+Then fill in your Dropbox API credentials in the generated `.env` file.
+
+### 3. Run the Flask API
+
+    source venv/bin/activate
+    python -m flask run
+
+The server will be available at: http://localhost:5000
+
+---
+
+## ⚙️ Project Scripts
+
+| Script                          | Purpose                                      |
+|--------------------------------|----------------------------------------------|
+| scripts/init_modular_flask_kb.sh | Scaffolds a new modular Flask API project   |
+| scripts/setup_dev.sh           | Prepares dev environment and config files    |
+
+
 ## 🧭 Future Roadmap
 
 - [ ] `GET /list_inbox_notes` to find unprocessed files

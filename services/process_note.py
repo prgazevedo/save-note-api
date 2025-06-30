@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-import dropbox_client  # your wrapper for Dropbox upload
+from services import dropbox_client # wrapper for Dropbox upload
 import utils  # helper functions for sanitizing filenames, etc.
 
 process_note = Blueprint('process_note', __name__)

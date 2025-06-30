@@ -3,7 +3,7 @@
 from flask import Blueprint, flash, jsonify, redirect, url_for
 from datetime import datetime, timezone
 from dateutil.parser import isoparse
-from dropbox_client import list_folder
+from services.dropbox_client import list_folder
 from utils.config_utils import load_config, save_config, save_last_files
 from utils.logging_utils import log_event
 

@@ -12,7 +12,7 @@ from routes.list import list_kb, list_kb_folder
 from routes.download import get_kb_note
 
 # Blueprints
-from process_note import process_note
+from services import process_note
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
 from routes.scan import bp as scan_bp

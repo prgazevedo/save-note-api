@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from dropbox_client import list_folder
+from services.dropbox_client import list_folder
 
 def list_kb():
     result, err = list_folder("/Apps/SaveNotesGPT/NotesKB")
