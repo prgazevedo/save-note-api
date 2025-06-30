@@ -1,2 +1,6 @@
 .env
 data/
+venv/
+data/admin_*.json
+flask.log
+__pycache__/
