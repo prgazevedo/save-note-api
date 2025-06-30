@@ -16,6 +16,7 @@ from process_note import process_note
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
 from routes.scan import bp as scan_bp
+from routes.api import bp as api_bp
 
 app = Flask(__name__)
 
@@ -33,6 +34,7 @@ app.register_blueprint(process_note)  # /process_note
 app.register_blueprint(auth_bp)       # /login, /logout
 app.register_blueprint(admin_bp)      # /admin/dashboard
 app.register_blueprint(scan_bp)
+app.register_blueprint(api_bp)
 
 # Create initial files on app startup
 load_config()
