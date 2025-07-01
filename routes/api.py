@@ -6,7 +6,7 @@ from dateutil.parser import isoparse
 from utils.config_utils import load_config, save_config, save_last_files
 from utils.logging_utils import log
 from services.dropbox_client import list_folder, download_note_from_dropbox
-from services.process_note import process_raw_markdown
+from services.process_service import archive_note_with_yaml
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -93,7 +93,7 @@ def api_process_file():
     filename = data["filename"]
     try:
         raw_md = download_note_from_dropbox(filename)
-        result = process_raw_markdown(raw_md, filename)
+        result = archive_note_with_yaml(raw_md, filename)
         log(f"📦 Processed file via API: {filename}")
         return jsonify({"status": "success", "result": result}), 200
     except Exception as e:
@@ -152,7 +152,7 @@ def api_scan_and_process():
         processed = []
         for filename in new_files:
             raw_md = download_note_from_dropbox(filename)
-            result = process_raw_markdown(raw_md, filename)
+            result = archive_note_with_yaml(raw_md, filename)
             processed.append(result)
 
         # Atualizar estado

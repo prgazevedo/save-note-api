@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.process_note import process_raw_markdown
+from services.process_service import archive_note_with_yaml
 from services import dropbox_client
 from utils.dropbox_utils import generate_yaml_front_matter, sanitize_filename
 from utils.logging_utils import log

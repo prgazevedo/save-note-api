@@ -1,4 +1,3 @@
-
 # 🧠 SaveNotesGPT — A Semantic Personal Knowledge System
 
 **SaveNotesGPT** is a lightweight, extensible platform for converting handwritten notes, daily entries, and research logs into structured, metadata-rich Markdown files. These notes are safely archived in Dropbox and semantically indexed using GPT — forming a durable, searchable personal knowledge base.
@@ -21,25 +20,72 @@ Enable a fluid pipeline where:
 
 ## 📡 System Overview
 
-| Component          | Description                                           |
-|-------------------|-------------------------------------------------------|
-| **Capture**        | Daily logs, work notes, research snippets             |
-| **Processing**     | GPT-generated metadata + summary                      |
-| **API Backend**    | Flask microservice on Render                          |
-| **Storage**        | Dropbox with date-based folders                       |
-| **Format**         | Markdown `.md` with Obsidian/Craft-compatible YAML   |
-| **Semantic Layer** | Embeddings + GPT vector search (planned)             |
+| Component      | Description                                         |
+|----------------|-----------------------------------------------------|
+| **Capture**    | Daily logs, work notes, research snippets           |
+| **Processing** | GPT-generated metadata + summary                    |
+| **API Backend**| Flask microservice on Render                        |
+| **Storage**    | Dropbox with date-based folders                     |
+| **Format**     | Markdown .md with Obsidian/Craft-compatible YAML    |
+| **Semantic Layer** | Embeddings + GPT vector search (planned)       |
 
 ---
 
-## 🔄 Current Flows
+## 🔄 Processing Modes
 
-### 📥 1. Structured Note Upload
+### 1️⃣ Push Metadata (external GPT adds metadata)
+
+JarbasGPT or other client generates and sends full YAML:
+
+`POST /api/process_note`
 
 ```json
-POST /save_note
 {
-  "content": "---\ntitle: Work Log – Backend Refactor\ndate: 2025-06-01\ntags: [work, backend, refactor]\nauthor: pedro.azevedo\nsource: gpt\ntype: text\nuid: work-refactor-20250601\nstatus: processed\nlinked_files: []\nlanguage: en\nsummary: >\n  Refactoring backend modular structure for note processing API.\n---\n\n# Backend Refactor Log\n\nToday I finalized the modular restructure of the Flask API..."
+  "filename": "2025-07-01_Meeting.md",
+  "yaml": {
+    "title": "Team Sync Notes",
+    "date": "2025-07-01",
+    "tags": ["team", "sync"],
+    "author": "me",
+    "summary": "Discussion of Q3 priorities and release plans."
+  }
+}
+```
+
+→ System reads the raw note from Dropbox Inbox, prepends YAML, archives to `/NotesKB/YYYY-MM/`.  
+🔧 Implemented via: `archive_note_with_yaml()` in `process_service.py`
+
+---
+
+### 2️⃣ Pull Metadata (API extracts via GPT)
+
+**Coming soon.**
+
+`POST /api/process_file`
+
+```json
+{
+  "filename": "README.md"
+}
+```
+
+→ System will:
+
+- Read note from Dropbox inbox  
+- Parse or request GPT to generate YAML metadata  
+- Archive to KB folder
+
+---
+
+## 📥 Note Upload (Direct)
+
+`POST /save_note`
+
+```json
+{
+  "title": "Work Log – Backend Refactor",
+  "date": "2025-06-01",
+  "content": "---\ntitle: Work Log – Backend Refactor\ndate: 2025-06-01\ntags: [work, backend, refactor]\nauthor: me\nsource: gpt\ntype: text\nuid: work-refactor-20250601\nstatus: processed\nlinked_files: []\nlanguage: en\nsummary: >\n  Refactoring backend modular structure for note processing API.\n---\n\n# Backend Refactor Log\n\nToday I finalized the modular restructure of the Flask API..."
 }
 ```
 
@@ -48,7 +94,7 @@ Stored at:
 
 ---
 
-### 📂 2. Folder Navigation (via API)
+## 📂 Folder Navigation (via API)
 
 - `GET /list_kb` → returns: `["2025-05", "2025-06"]`
 - `GET /list_kb_folder?folder=2025-06` → lists all `.md` files in the folder
@@ -56,55 +102,27 @@ Stored at:
 
 ---
 
-### 🧠 3. GPT-Based Metadata Injection
-
-```json
-POST /process_note
-{
-  "filename": "2025-06-01_work_log.md",
-  "yaml": {
-    "title": "Work Log – Backend Refactor",
-    "date": "2025-06-01",
-    "tags": ["work", "backend", "refactor"],
-    "author": "pedro.azevedo",
-    "source": "gpt",
-    "type": "text",
-    "uid": "work-refactor-20250601",
-    "status": "processed",
-    "linked_files": [],
-    "language": "en",
-    "summary": "Refactoring backend modular structure for note processing API."
-  }
-}
-```
-
-Flask reads the file, constructs YAML, prepends it, and saves the structured note to `/NotesKB/YYYY-MM/`.
-
----
-
 ## 🧰 Stack
 
-| Layer       | Tool / Service           |
-|-------------|---------------------------|
-| Backend     | Flask (Python)            |
-| Deployment  | Render.com                |
-| Storage     | Dropbox (OAuth2 Refresh)  |
-| Client      | ChatGPT (Custom GPT)      |
-| Integration | Craft, Obsidian           |
-| Language    | Markdown `.md`            |
-| Logging     | Logtail + JSON logs       |
+| Layer    | Tool / Service           |
+|----------|---------------------------|
+| Backend  | Flask (Python)            |
+| Deployment | Render.com              |
+| Storage  | Dropbox (OAuth2 Refresh)  |
+| Client   | ChatGPT (Custom GPT)      |
+| Integration | Craft, Obsidian        |
+| Language | Markdown .md              |
+| Logging  | Logtail + JSON logs       |
 
 ---
 
 ## 🔐 Authentication
 
 - `/login` and `/admin/dashboard` protected by session login
-
-Environment variables:
-
-- `ADMIN_USERNAME`
-- `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`
-- `FLASK_SECRET_KEY`
+- Environment variables:
+  - `ADMIN_USERNAME`
+  - `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`
+  - `FLASK_SECRET_KEY`
 
 ---
 
@@ -112,11 +130,11 @@ Environment variables:
 
 Structured logging is handled via `logging_utils.py`:
 
-| Output        | When                          |
-|---------------|-------------------------------|
-| Stdout        | Always                        |
-| Logtail       | If `LOGTAIL_TOKEN` is defined |
-| `admin_log.json` | When running locally         |
+| Output         | When                    |
+|----------------|--------------------------|
+| Stdout         | Always                   |
+| Logtail        | If `LOGTAIL_TOKEN` is defined |
+| admin_log.json | When running locally     |
 
 All logs are JSON-structured to support Logtail ingestion and Render streaming.
 
@@ -124,23 +142,23 @@ All logs are JSON-structured to support Logtail ingestion and Render streaming.
 
 ## 🧪 Status
 
-| Feature                            | State     |
-|------------------------------------|-----------|
-| Dropbox API File Upload            | ✅ Stable |
-| GPT to Markdown Structuring Flow   | ✅ Manual |
-| GPT Metadata Injection             | ✅ Working|
-| Obsidian/Craft Metadata Compatibility | ✅ Working|
-| File Browser APIs                  | ✅ Working|
-| Embedded Swagger API Docs          | ✅ Working|
-| Logtail Integration                | ✅ Working|
-| Embedding + Semantic Search        | 🔜 Planned|
-| Batch GPT Processing Queue         | 🔜 Planned|
+| Feature                         | State     |
+|----------------------------------|-----------|
+| Dropbox API File Upload         | ✅ Stable |
+| GPT to Markdown Structuring Flow| ✅ Manual |
+| GPT Metadata Injection          | ✅ Working|
+| Obsidian/Craft Metadata Compatibility | ✅ Working |
+| File Browser APIs               | ✅ Working |
+| Embedded Swagger API Docs      | ✅ Working |
+| Logtail Integration             | ✅ Working |
+| Embedding + Semantic Search     | 🔜 Planned|
+| Batch GPT Processing Queue      | 🔜 Planned|
 
 ---
 
 ## 📁 Dropbox Layout
 
-```plaintext
+```
 Dropbox/
 └── Apps/
     └── SaveNotesGPT/
@@ -156,18 +174,14 @@ Dropbox/
 
 ## 🔧 Local Development Setup
 
-Use this if you're running the project locally or inside GitHub Codespaces.
-
-### 1. Clone the repository
+1. Clone the repository
 
 ```bash
 git clone https://github.com/prgazevedo/save-note-api.git
 cd save-note-api
 ```
 
-### 2. Run setup script
-
-This creates a Python virtual environment, installs dependencies, generates the `.env`, and ensures required data files:
+2. Run setup script
 
 ```bash
 bash scripts/setup_dev.sh
@@ -175,7 +189,7 @@ bash scripts/setup_dev.sh
 
 Then fill in your Dropbox API credentials and admin variables in the generated `.env` file.
 
-### 3. Run the Flask API
+3. Run the Flask API
 
 ```bash
 source venv/bin/activate
@@ -186,17 +200,16 @@ python app.py
 
 ## ⚙️ Project Scripts
 
-| Script                          | Purpose                               |
-|---------------------------------|---------------------------------------|
-| `scripts/init_modular_flask_kb.sh` | Scaffolds a new modular Flask API    |
-| `scripts/setup_dev.sh`         | Prepares dev environment and configs  |
+| Script                          | Purpose                             |
+|----------------------------------|-------------------------------------|
+| scripts/init_modular_flask_kb.sh| Scaffolds a new modular Flask API   |
+| scripts/setup_dev.sh            | Prepares dev environment and configs|
 
 ---
 
 ## 🔭 Swagger API
 
-Available at: `/apidocs`
-
+- Available at: `/apidocs`
 - Uses Flasgger
 - Custom description links to README
 - Docs auto-load all Flask routes
@@ -205,24 +218,21 @@ Available at: `/apidocs`
 
 ## 🔐 Admin Dashboard
 
-Available at: `/admin/dashboard`
-
-Requires login with env credentials
-
-Allows:
-
-- Editing inbox / KB folders
-- Triggering inbox scan
-- Viewing logs and recent files
+- Available at: `/admin/dashboard`
+- Requires login with env credentials
+- Allows:
+  - Editing inbox / KB folders
+  - Triggering inbox scan
+  - Viewing logs and recent files
 
 ---
 
 ## 🧭 Roadmap
 
-- `GET /list_inbox_notes` to find unprocessed files  
-- GPT-assisted batch processing via `/process_note`  
-- Embed notes into vector DB for GPT-powered semantic search  
-- SwiftBar/iOS Shortcuts integrations for upload  
+- `GET /list_inbox_notes` to find unprocessed files
+- GPT-assisted batch processing via `/process_note`
+- Embed notes into vector DB for GPT-powered semantic search
+- SwiftBar/iOS Shortcuts integrations for upload
 
 ---
 
@@ -234,5 +244,5 @@ MIT License — for personal use, reflection, and synthesis workflows.
 
 ## 🔖 Version Tag
 
-`v2.1.0-logtail-gpt-integration`  
-*Structure today. Retrieve tomorrow.*
+**v2.2.0-arch-pushpull**  
+Structure today. Retrieve tomorrow.
