@@ -1,0 +1,143 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SaveNotesGPT API",
+    "version": "1.0.0",
+    "description": "Endpoints for JarbasGPT to list, read, and archive Markdown notes in Dropbox via Push flow."
+  },
+  "servers": [
+    {
+      "url": "https://save-note-api.onrender.com",
+      "description": "Render deployment"
+    }
+  ],
+  "paths": {
+    "/api/scan_inbox": {
+      "post": {
+        "operationId": "scan_inbox",
+        "summary": "Scan Dropbox Inbox",
+        "description": "Lists Markdown files in the Inbox folder",
+        "responses": {
+          "200": {
+            "description": "List of files",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "new_files": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get_inbox_note": {
+      "get": {
+        "operationId": "get_inbox_note",
+        "summary": "Read Inbox Note Content",
+        "description": "Fetches raw Markdown content of a note from the Inbox folder.",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "content": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/process_note": {
+      "post": {
+        "operationId": "process_note",
+        "summary": "Inject YAML and Archive",
+        "description": "Adds GPT-generated metadata to an existing note in the Inbox and archives it in structured KB folder.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["filename", "yaml"],
+                "properties": {
+                  "filename": { "type": "string" },
+                  "yaml": {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "date": { "type": "string", "format": "date" },
+                      "tags": { "type": "array", "items": { "type": "string" } },
+                      "author": { "type": "string" },
+                      "source": { "type": "string" },
+                      "type": { "type": "string" },
+                      "uid": { "type": "string" },
+                      "status": { "type": "string" },
+                      "linked_files": { "type": "array", "items": { "type": "string" } },
+                      "language": { "type": "string" },
+                      "summary": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note archived"
+          }
+        }
+      }
+    },
+    "/save_note": {
+      "post": {
+        "operationId": "save_note_to_dropbox",
+        "summary": "Save complete Markdown",
+        "description": "Saves a full Markdown file (with YAML frontmatter) directly to Dropbox.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "date", "content"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "date": { "type": "string", "format": "date" },
+                  "content": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Note saved"
+          }
+        }
+      }
+    }
+  }
+}
