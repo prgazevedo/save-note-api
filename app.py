@@ -38,8 +38,9 @@ swagger_config = {
             "model_filter": lambda tag: True,
         }
     ],
+    "static_url_path": "/flasgger_static",
     "swagger_ui": True,
-    "specs_route": "/apidocs/",
+    "specs_route": "/apidocs/"
 }
 
 swagger_template = {
