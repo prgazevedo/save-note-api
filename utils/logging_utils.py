@@ -3,8 +3,8 @@
 import os
 import json
 import logging
+import requests
 from datetime import datetime
-from logtail import LogtailHandler
 
 # --- Config Flags ---
 IS_RENDER = os.getenv("RENDER", "false").lower() == "true"
@@ -23,9 +23,8 @@ logger = logging.getLogger("SaveNotesLogger")
 logger.setLevel(logging.INFO)
 logger.propagate = False  # Prevent double logs
 
-# Avoid duplicate handlers
 if not logger.handlers:
-    # Stdout (Render reads this)
+    # Stdout handler (Render reads this)
     stdout_handler = logging.StreamHandler()
     stdout_handler.setFormatter(logging.Formatter(
         fmt="%(asctime)s [%(levelname)s] %(message)s",
@@ -33,23 +32,34 @@ if not logger.handlers:
     ))
     logger.addHandler(stdout_handler)
 
-    # Logtail (if available)
-    if LOGTAIL_TOKEN:
-        logtail_handler = LogtailHandler(source_token=LOGTAIL_TOKEN)
-        logtail_handler.setFormatter(logging.Formatter(fmt="%(message)s"))
-        logger.addHandler(logtail_handler)
+# --- Logtail HTTP Fallback (bypassing SDK) ---
+def send_to_logtail(message: str):
+    if not LOGTAIL_TOKEN:
+        return
+
+    try:
+        requests.post(
+            url="https://in.logs.betterstack.com",
+            headers={
+                "Authorization": f"Bearer {LOGTAIL_TOKEN}",
+                "Content-Type": "application/json"
+            },
+            json={"message": message},
+            timeout=2
+        )
+    except Exception as e:
+        logger.warning(f"Logtail send failed: {e}")
 
 # --- Log Function ---
 def log(message: str, level: str = "info"):
     """
-    Logs to stdout + Logtail (string), and to local JSON (structured).
+    Logs to stdout, Logtail (via HTTP), and to local JSON file (dev only).
     """
     timestamp = datetime.utcnow().isoformat()
     level = level.lower()
-
-    # Render + Logtail = plain string
     log_str = f"[{timestamp}] {level.upper()}: {message}"
 
+    # Stdout (Render)
     if level == "error":
         logger.error(log_str)
     elif level == "warning":
@@ -57,7 +67,10 @@ def log(message: str, level: str = "info"):
     else:
         logger.info(log_str)
 
-    # Local structured JSON log
+    # Logtail (HTTP)
+    send_to_logtail(log_str)
+
+    # Dev-only local JSON log
     if not IS_RENDER:
         try:
             logs = []
