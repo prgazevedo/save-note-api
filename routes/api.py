@@ -11,7 +11,7 @@ from services.process_note import process_raw_markdown
 bp = Blueprint("api", __name__, url_prefix="/api")
 
 
-@bp.route("/api/scan_inbox", methods=["POST"])
+@bp.route("/scan_inbox", methods=["POST"])
 def api_scan_inbox():
     """
     Scan Dropbox Inbox for new markdown files.
