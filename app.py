@@ -12,18 +12,14 @@ from utils.config_utils import load_config, load_logs, load_last_files
 load_dotenv()
 
 # Route handlers
-from routes.upload import upload_note
-from routes.list import list_kb, list_kb_folder
-from routes.download import get_kb_note, get_inbox_note
-
-
-
-# Blueprints
 from routes.process import process_note
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
 from routes.scan import bp as scan_bp
 from routes.api import bp as api_bp
+from routes.upload import upload_note_api
+from routes.list import list_kb, list_kb_folder
+from routes.download import download_routes
 
 app = Flask(__name__)
 
@@ -71,6 +67,8 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(scan_bp)
 app.register_blueprint(api_bp)
+app.register_blueprint(download_routes)
+app.register_blueprint(upload_note_api)
 
 
 # Initial data files

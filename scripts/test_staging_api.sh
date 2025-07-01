@@ -1,4 +1,5 @@
 #!/bin/bash
+#test_staging_api.sh
 STAGING_URL="https://save-note-api.onrender.com"
 
 echo "🌍 Testing staging @ $STAGING_URL"

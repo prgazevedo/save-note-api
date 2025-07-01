@@ -1,8 +1,13 @@
-from flask import request, jsonify
+# routes/download.py
+
+from flask import Blueprint, request, jsonify
 from services.dropbox_client import download_note_from_dropbox
 from utils.logging_utils import log
 
+download_bp = Blueprint("download", __name__, url_prefix="/api")
 
+
+@download_bp.route("/get_kb_note", methods=["GET"])
 def get_kb_note():
     """
     Download a note from the Knowledge Base by filename.
@@ -49,6 +54,7 @@ def get_kb_note():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@download_bp.route("/get_inbox_note", methods=["GET"])
 def get_inbox_note():
     """
     Download a raw note from the Dropbox Inbox folder.
@@ -93,3 +99,7 @@ def get_inbox_note():
     except Exception as e:
         log(f"❌ download Inbox error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# 👇 Import this in app.py
+download_routes = download_bp

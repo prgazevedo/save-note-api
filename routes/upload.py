@@ -1,9 +1,12 @@
 # routes/upload.py
 
-from flask import request, jsonify
+from flask import Blueprint, request, jsonify
 from services.dropbox_client import upload_note_to_dropbox
 from utils.logging_utils import log
 
+upload_note_bp = Blueprint("upload_note", __name__, url_prefix="/api")
+
+@upload_note_bp.route("/save_note", methods=["POST"])
 def upload_note():
     """
     Upload a raw note to Dropbox (unstructured).
@@ -77,3 +80,6 @@ def upload_note():
     except Exception as e:
         log(f"❌ Exception during note upload: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+# 👇 For app.py import
+upload_note_api = upload_note_bp

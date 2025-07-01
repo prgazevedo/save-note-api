@@ -3,7 +3,7 @@
   "info": {
     "title": "SaveNotesGPT API",
     "version": "1.0.0",
-    "description": "Endpoints for JarbasGPT to list, read, and archive Markdown notes in Dropbox via Push flow."
+    "description": "Endpoints for JarbasGPT to list, read, and archive Markdown notes in Dropbox via Push flow. All routes are namespaced under /api/."
   },
   "servers": [
     {
@@ -38,7 +38,7 @@
         }
       }
     },
-    "/get_inbox_note": {
+    "/api/get_inbox_note": {
       "get": {
         "operationId": "get_inbox_note",
         "summary": "Read Inbox Note Content",
@@ -69,7 +69,7 @@
         }
       }
     },
-    "/process_note": {
+    "/api/process_note": {
       "post": {
         "operationId": "process_note",
         "summary": "Inject YAML and Archive",
@@ -111,7 +111,7 @@
         }
       }
     },
-    "/save_note": {
+    "/api/save_note": {
       "post": {
         "operationId": "save_note_to_dropbox",
         "summary": "Save complete Markdown",
