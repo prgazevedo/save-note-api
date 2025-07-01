@@ -233,5 +233,5 @@ MIT License — for personal use, reflection, and synthesis workflows.
 
 ## 🔖 Version Tag
 
-**v2.2.0-arch-pushpull**  
+**v3.0.0-openapi-gpt**  
 Structure today. Retrieve tomorrow.
