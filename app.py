@@ -70,10 +70,26 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(scan_bp)
 app.register_blueprint(api_bp)
 
+
 # Initial data files
 load_config()
 load_logs()
 load_last_files()
+
+# 🔍 Logtail Direct Test
+if os.getenv("LOGTAIL_TOKEN"):
+    import logging
+    from logtail import LogtailHandler
+
+    test_logger = logging.getLogger("LogtailTest")
+    test_logger.setLevel(logging.INFO)
+    handler = LogtailHandler(source_token=os.getenv("LOGTAIL_TOKEN"))
+    handler.setFormatter(logging.Formatter(fmt="%(message)s"))
+    test_logger.addHandler(handler)
+    test_logger.propagate = False
+    test_logger.info("🚀 LogtailHandler connected from app.py startup")
+else:
+    print("⚠️ LOGTAIL_TOKEN not found, skipping Logtail direct test")
 
 @app.route("/")
 def health_check():
