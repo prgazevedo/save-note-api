@@ -99,4 +99,7 @@ if __name__ == "__main__":
     print("✅ SaveNotesGPT is starting...")
     print("📚 API Docs:    https://save-note-api.onrender.com/apidocs/")
     print("🔐 Admin Panel: https://save-note-api.onrender.com/admin/dashboard")
+    log("✅ SaveNotesGPT is starting...", level="info")
+    log("📚 API Docs:    https://save-note-api.onrender.com/apidocs/", level="info")
+    log("🔐 Admin Panel: https://save-note-api.onrender.com/admin/dashboard", level="info")
     app.run(host="0.0.0.0", port=5000, debug=True)
