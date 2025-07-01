@@ -55,8 +55,36 @@ def api_scan_inbox():
 @bp.route("/process_file", methods=["POST"])
 def api_process_file():
     """
-    Processa um único ficheiro Markdown do Inbox pelo nome.
-    Exemplo payload: { "filename": "2025-06-30_MinhaNota.md" }
+    Process a specific Markdown file from the Dropbox Inbox by name.
+    ---
+    tags:
+      - Dropbox
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - filename
+            properties:
+              filename:
+                type: string
+                example: 2025-06-30_MinhaNota.md
+    responses:
+      200:
+        description: File processed successfully
+        content:
+          application/json:
+            example:
+              status: success
+              result:
+                dropbox_path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-30_minha-nota.md
+                upload: true
+      400:
+        description: Missing filename in request
+      500:
+        description: Error processing file
     """
     data = request.get_json()
     if not data or "filename" not in data:
@@ -76,8 +104,35 @@ def api_process_file():
 @bp.route("/scan_and_process", methods=["POST"])
 def api_scan_and_process():
     """
-    Combina scan + process de novos ficheiros Markdown do inbox.
-    Atualiza o last_scan e devolve os resultados processados.
+    Scan Dropbox Inbox for new Markdown files and process them into structured notes.
+    ---
+    tags:
+      - Dropbox
+    summary: Scan & Process new files
+    description: |
+      Combines scanning and processing of newly added `.md` files in the Dropbox Inbox folder
+      since the last scan. Uses and updates `last_scan` timestamp in `admin_config.json`.
+      Saves processed file list and logs the operation.
+    responses:
+      200:
+        description: Successfully processed new files
+        content:
+          application/json:
+            example:
+              status: success
+              count: 2
+              processed:
+                - dropbox_path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-01_test-note.md
+                  upload: true
+                - dropbox_path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-02_refactor_patch_test.md
+                  upload: true
+      500:
+        description: Server error while processing files
+        content:
+          application/json:
+            example:
+              status: error
+              message: "Dropbox API error or invalid metadata"
     """
     config = load_config()
     inbox_path = config.get("inbox_path")
