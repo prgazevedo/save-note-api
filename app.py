@@ -1,32 +1,27 @@
-# app.py
-
 import os
 from flask import Flask, redirect, url_for, jsonify
 from dotenv import load_dotenv
 from flasgger import Swagger
 from utils.logging_utils import log
-
 from utils.config_utils import load_config, load_logs, load_last_files
 
 # Load local .env for dev
 load_dotenv()
 
-# Route handlers
+# Route handlers (blueprints and views)
 from routes.process import process_note
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
 from routes.scan import bp as scan_bp
 from routes.api import bp as api_bp
 from routes.upload import upload_note_api
-from routes.list import list_kb, list_kb_folder
 from routes.download import download_routes
+from routes.list import list_kb, list_kb_folder
 
 app = Flask(__name__)
-
-# Session key (for login session)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-insecure-default")
 
-# Swagger config with README link
+# Swagger setup
 swagger_config = {
     "headers": [],
     "specs": [
@@ -55,13 +50,11 @@ swagger_template = {
 
 Swagger(app, config=swagger_config, template=swagger_template)
 
-# Function-based routes
-app.add_url_rule("/save_note", view_func=upload_note, methods=["POST"])
+# ✅ Function-based list endpoints (optional to move to blueprint later)
 app.add_url_rule("/list_kb", view_func=list_kb, methods=["GET"])
 app.add_url_rule("/list_kb_folder", view_func=list_kb_folder, methods=["GET"])
-app.add_url_rule("/get_kb_note", view_func=get_kb_note, methods=["GET"])
-app.add_url_rule("/get_inbox_note", view_func=get_inbox_note, methods=["GET"])
-# Register blueprints
+
+# ✅ Register blueprints (all under /api)
 app.register_blueprint(process_note)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
@@ -70,13 +63,12 @@ app.register_blueprint(api_bp)
 app.register_blueprint(download_routes)
 app.register_blueprint(upload_note_api)
 
-
-# Initial data files
+# Initial load
 load_config()
 load_logs()
 load_last_files()
 
-# 🔍 Logtail Direct Test
+# Optional: Logtail test connection
 if os.getenv("LOGTAIL_TOKEN"):
     import logging
     from logtail import LogtailHandler
@@ -91,10 +83,12 @@ if os.getenv("LOGTAIL_TOKEN"):
 else:
     print("⚠️ LOGTAIL_TOKEN not found, skipping Logtail direct test")
 
+# Health check route
 @app.route("/")
 def health_check():
     return jsonify({"status": "ok", "version": "v3.0.0"})
 
+# Start Flask app
 if __name__ == "__main__":
     print("✅ SaveNotesGPT is starting...")
     print("📚 API Docs:    https://save-note-api.onrender.com/apidocs/")
