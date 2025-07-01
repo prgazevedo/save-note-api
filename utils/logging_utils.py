@@ -4,18 +4,29 @@ import os
 import json
 import logging
 from datetime import datetime
+from logtail import LogtailHandler
 
-ENV = os.getenv("RENDER", "false").lower()
-IS_RENDER = ENV == "true"
+# Environment detection
+IS_RENDER = os.getenv("RENDER", "false").lower() == "true"
+LOGTAIL_TOKEN = os.getenv("LOGTAIL_TOKEN")
 
-# Structured JSON logs (for Render streaming)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
+# Configure logger
+logger = logging.getLogger("SaveNotesLogger")
+logger.setLevel(logging.INFO)
 
-# Local file fallback (for dev only)
+# Log to stdout
+stdout_handler = logging.StreamHandler()
+stdout_handler.setFormatter(logging.Formatter(
+    fmt="%(asctime)s [%(levelname)s] %(message)s"
+))
+logger.addHandler(stdout_handler)
+
+# Log to Logtail if token is set
+if LOGTAIL_TOKEN:
+    logtail_handler = LogtailHandler(source_token=LOGTAIL_TOKEN)
+    logger.addHandler(logtail_handler)
+
+# Local dev: save logs to JSON file
 DATA_DIR = "data"
 LOG_FILE = os.path.join(DATA_DIR, "admin_log.json")
 FILES_FILE = os.path.join(DATA_DIR, "last_files.json")
@@ -25,33 +36,33 @@ if not IS_RENDER:
 
 def log(message: str, level: str = "info"):
     """
-    Unified logger for all levels.
-    Logs to stdout and (if not on Render) also to admin_log.json.
+    Logs to stdout, Logtail (if enabled), and local file (if dev).
     """
     timestamp = datetime.utcnow().isoformat()
     json_log = {
         "timestamp": timestamp,
         "level": level.upper(),
-        "message": message
+        "message": message,
     }
 
-    # Always log to stdout
+    # Dispatch to logger
     if level == "error":
-        logging.error(json.dumps(json_log))
+        logger.error(json_log)
     elif level == "warning":
-        logging.warning(json.dumps(json_log))
+        logger.warning(json_log)
     else:
-        logging.info(json.dumps(json_log))
+        logger.info(json_log)
 
-    # Only save to local file if not on Render
+    # Also save to file (if dev)
     if not IS_RENDER:
-        logs = []
-        if os.path.exists(LOG_FILE):
-            with open(LOG_FILE, "r") as f:
-                try:
+        try:
+            logs = []
+            if os.path.exists(LOG_FILE):
+                with open(LOG_FILE, "r") as f:
                     logs = json.load(f)
-                except json.JSONDecodeError:
-                    logs = []
+        except Exception:
+            logs = []
+
         logs.insert(0, f"[{timestamp}] {level.upper()}: {message}")
         logs = logs[:50]
         with open(LOG_FILE, "w") as f:
