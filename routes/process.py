@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from services.process_note import process_raw_markdown
 from services import dropbox_client
 from utils.dropbox_utils import generate_yaml_front_matter, sanitize_filename
-from utils.logging_utils import log_event
+from utils.logging_utils import log
 from datetime import datetime
 
 process_note_bp = Blueprint("process_note", __name__)
@@ -44,7 +44,7 @@ def handle_process_note():
         })
 
     except Exception as e:
-        log_event(f"❌ /process_note error: {str(e)}")
+        log(f"❌ /process_note error: {str(e)}")
         print(f"❌ /process_note error: {str(e)}")  # Visible in Render logs
         return jsonify({"status": "error", "message": str(e)}), 500
 

@@ -4,3 +4,4 @@ venv/
 data/admin_*.json
 flask.log
 __pycache__/
+scripts/migrate_logs.sh

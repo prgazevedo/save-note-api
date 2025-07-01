@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from dateutil.parser import isoparse
 from services.dropbox_client import list_folder
 from utils.config_utils import load_config, save_config, save_last_files
-from utils.logging_utils import log_event
+from utils.logging_utils import log
 
 bp = Blueprint("scan", __name__, url_prefix="/admin")
 
@@ -30,7 +30,7 @@ def scan_inbox():
         config["last_scan"] = datetime.now(timezone.utc).isoformat()
         save_config(config)
         save_last_files(new_files)
-        log_event(f"📥 Scanned inbox: {len(new_files)} new file(s)")
+        log(f"📥 Scanned inbox: {len(new_files)} new file(s)")
 
         #return jsonify({
         #    "status": "success",
@@ -40,6 +40,6 @@ def scan_inbox():
 
         return redirect(url_for("admin.dashboard"))  # <- ADICIONE
     except Exception as e:
-        log_event(f"❌ Error scanning inbox: {str(e)}")
+        log(f"❌ Error scanning inbox: {str(e)}")
         flash(f"Error: {str(e)}", "danger")  # mostrar erro na UI
         return redirect(url_for("admin.dashboard"))  # mesmo em erro

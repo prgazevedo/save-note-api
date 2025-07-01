@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request
 from datetime import datetime, timezone
 from dateutil.parser import isoparse
 from utils.config_utils import load_config, save_config, save_last_files
-from utils.logging_utils import log_event
+from utils.logging_utils import log
 from services.dropbox_client import list_folder, download_note_from_dropbox
 from services.process_note import process_raw_markdown
 
@@ -48,7 +48,7 @@ def api_scan_inbox():
 
         return jsonify({"status": "success", "new_files": new_files}), 200
     except Exception as e:
-        log_event(f"❌ scan_inbox error: {str(e)}")
+        log(f"❌ scan_inbox error: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -94,10 +94,10 @@ def api_process_file():
     try:
         raw_md = download_note_from_dropbox(filename)
         result = process_raw_markdown(raw_md, filename)
-        log_event(f"📦 Processed file via API: {filename}")
+        log(f"📦 Processed file via API: {filename}")
         return jsonify({"status": "success", "result": result}), 200
     except Exception as e:
-        log_event(f"❌ process_file error: {str(e)}")
+        log(f"❌ process_file error: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -159,7 +159,7 @@ def api_scan_and_process():
         config["last_scan"] = datetime.now(timezone.utc).isoformat()
         save_config(config)
         save_last_files(new_files)
-        log_event(f"🤖 scan_and_process: {len(processed)} file(s)")
+        log(f"🤖 scan_and_process: {len(processed)} file(s)")
 
         return jsonify({
             "status": "success",
@@ -168,5 +168,5 @@ def api_scan_and_process():
         }), 200
 
     except Exception as e:
-        log_event(f"❌ scan_and_process error: {str(e)}")
+        log(f"❌ scan_and_process error: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500

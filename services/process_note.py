@@ -1,7 +1,7 @@
 from datetime import datetime
 from services import dropbox_client
 from utils.dropbox_utils import generate_yaml_front_matter, sanitize_filename
-from utils.logging_utils import log_event
+from utils.logging_utils import log
 
 def process_raw_markdown(original_md: str, filename: str, yaml_override: dict = None):
     # Derive defaults from filename
@@ -30,7 +30,7 @@ def process_raw_markdown(original_md: str, filename: str, yaml_override: dict = 
     upload_result = dropbox_client.upload_structured_note(new_path, structured_note)
 
     # Log
-    log_event(f"📄 Uploaded: {new_filename}")
+    log(f"📄 Uploaded: {new_filename}")
 
     return {
         "dropbox_path": new_path,

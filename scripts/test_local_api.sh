@@ -44,17 +44,26 @@ fi
 
 echo "📡 Testing endpoints..."
 
-# 4. Call endpoints
-echo -e "\n🔍 /api/scan_inbox"
-curl -s -X POST http://localhost:5000/api/scan_inbox | jq
+# 4. Call endpoints with safe jq fallback
+function test_endpoint() {
+  local name="$1"
+  local method="$2"
+  local url="$3"
+  local data="$4"
 
-echo -e "\n📦 /api/process_file (example)"
-curl -s -X POST http://localhost:5000/api/process_file \
-  -H "Content-Type: application/json" \
-  -d '{"filename": "2025-06-30_MinhaNota.md"}' | jq
+  echo -e "\n🔹 $name"
+  if [ "$method" == "POST" ]; then
+    RESPONSE=$(curl -s -X POST "$url" -H "Content-Type: application/json" -d "$data")
+  else
+    RESPONSE=$(curl -s "$url")
+  fi
 
-echo -e "\n🤖 /api/scan_and_process"
-curl -s -X POST http://localhost:5000/api/scan_and_process | jq
+  echo "$RESPONSE" | jq . 2>/dev/null || echo "$RESPONSE"
+}
+
+test_endpoint "/api/scan_inbox" POST http://localhost:5000/api/scan_inbox '{}'
+test_endpoint "/api/process_file" POST http://localhost:5000/api/process_file '{"filename": "2025-06-30_MinhaNota.md"}'
+test_endpoint "/api/scan_and_process" POST http://localhost:5000/api/scan_and_process '{}'
 
 # 5. Cleanup
 echo -e "\n🛑 Stopping Flask (PID $FLASK_PID)"
