@@ -11,8 +11,6 @@ from services.process_note import process_raw_markdown
 bp = Blueprint("api", __name__, url_prefix="/api")
 
 
-@bp.route("/scan_inbox", methods=["POST"])
-def api_scan_inbox():
 @bp.route("/api/scan_inbox", methods=["POST"])
 def api_scan_inbox():
     """
