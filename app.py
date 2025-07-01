@@ -50,6 +50,7 @@ swagger_template = {
         "description": (
             "API for managing Markdown notes with Dropbox.\n\n"
             "👉 [📖 View README](https://github.com/prgazevedo/save-note-api/blob/main/README.md)"
+        )
     }
 }
 
