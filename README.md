@@ -46,6 +46,48 @@ In this mode, the system automatically generates metadata using GPT calls.
 ✅ This allows the app to function without GPT actively pushing notes — enabling full automation, batch processing, or scheduled runs.
 
 ---
+## 🧠 GPT Integration (JarbasGPT via OpenAPI)
+
+To connect **JarbasGPT** with your API backend and enable semantic note processing, you can import the OpenAPI schema directly from GitHub using the **"Import from URL"** option in the [ChatGPT Actions interface](https://platform.openai.com/docs/assistants/tools/actions).
+
+### ✅ Steps to Connect SaveNotesGPT API to GPT (Jarbas)
+
+1. The OpenAPI schema of the GPT is inthe GitHub repo:
+
+   ```
+   save-note-api/gpt/jarbas_openapi.json
+   ```
+
+2. In ChatGPT, go to:
+   ```
+   Assistants → Add Tool → Actions → Import from URL
+   ```
+
+3. Paste the raw GitHub URL to your schema file:
+
+   ```
+   https://raw.githubusercontent.com/prgazevedo/save-note-api/main/gpt/jarbas_openapi.json
+   ```
+
+4. Click **Import**. The assistant will recognize the API and expose the actions for calling:
+
+---
+
+### 📡 Supported API Actions
+
+| Operation         | Path                        | Description                                  |
+|------------------|-----------------------------|----------------------------------------------|
+| `scan_inbox`     | `POST /api/scan_inbox`      | List Markdown files in Inbox                 |
+| `get_inbox_note` | `GET /api/get_inbox_note`   | Fetch raw Markdown content from Inbox        |
+| `process_note`   | `POST /api/process_note`    | Inject metadata and archive a note           |
+| `save_note`      | `POST /api/save_note`       | Upload full Markdown note with frontmatter   |
+
+> 📌 **Note:** The schema must be publicly accessible on GitHub and committed to the `main` branch.
+
+---
+
+Once connected, JarbasGPT can list notes, read raw Markdown, inject GPT metadata, and archive files — all through your authenticated Render deployment.
+___
 
 ## 📥 Note Upload (Direct)
 
