@@ -1,33 +1,82 @@
+# routes/list.py
+
 from flask import request, jsonify
+from utils.config_utils import load_config
 from services.dropbox_client import list_folder
+from utils.logging_utils import log
+
 
 def list_kb():
-    result, err = list_folder("/Apps/SaveNotesGPT/NotesKB")
-    if err:
-        return jsonify({"status": "error", "message": err}), 500
-    folders = [e["name"] for e in result.get("entries", []) if e[".tag"] == "folder"]
-    return jsonify({"status": "success", "folders": folders})
+    """
+    List all files in the knowledge base folder.
+    ---
+    tags:
+      - Dropbox
+    summary: List KB folder
+    responses:
+      200:
+        description: List of KB files
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+    """
+    try:
+        kb_path = load_config().get("kb_path")
+        entries = list_folder(kb_path)
+        files = [item["name"] for item in entries if item[".tag"] == "file"]
+        log(f"📚 Listed KB folder: {len(files)} files")
+        return jsonify({"status": "success", "files": files}), 200
+    except Exception as e:
+        log(f"❌ list_kb error: {str(e)}", level="error")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 def list_kb_folder():
+    """
+    List files inside a specific subfolder in the KB (e.g. `2025-06`).
+    ---
+    tags:
+      - Dropbox
+    summary: List KB subfolder
+    parameters:
+      - name: folder
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Subfolder inside the KB (e.g., 2025-06)
+    responses:
+      200:
+        description: Files found in subfolder
+        content:
+          application/json:
+            example:
+              status: success
+              files: ["2025-06-01_test-note.md"]
+      400:
+        description: Missing folder parameter
+      500:
+        description: Error accessing Dropbox
+    """
     folder = request.args.get("folder")
     if not folder:
-        return jsonify({"status": "error", "message": "Missing 'folder' param"}), 400
+        return jsonify({"status": "error", "message": "Missing folder parameter"}), 400
 
-    result = list_folder(f"/Apps/SaveNotesGPT/NotesKB/{folder}")
-    
-    # If it's an error dict
-    if isinstance(result, dict) and "error" in result:
-        return jsonify({"status": "error", "message": result["error"]}), 500
-    
-    # If result is a dict with 'entries'
-    if isinstance(result, dict) and "entries" in result:
-        entries = result["entries"]
-    # If result is already a list
-    elif isinstance(result, list):
-        entries = result
-    else:
-        return jsonify({"status": "error", "message": "Unexpected format returned from list_folder"}), 500
-
-    files = [e["name"] for e in entries if e.get(".tag") == "file"]
-    return jsonify({"status": "success", "files": files})
-
+    try:
+        base = load_config().get("kb_path")
+        path = f"{base}/{folder}"
+        entries = list_folder(path)
+        files = [item["name"] for item in entries if item[".tag"] == "file"]
+        log(f"📁 Listed subfolder '{folder}': {len(files)} files")
+        return jsonify({"status": "success", "files": files}), 200
+    except Exception as e:
+        log(f"❌ list_kb_folder error: {str(e)}", level="error")
+        return jsonify({"status": "error", "message": str(e)}), 500

@@ -1,45 +1,53 @@
 # routes/scan.py
 
-from flask import Blueprint, flash, jsonify, redirect, url_for
-from datetime import datetime, timezone
-from dateutil.parser import isoparse
-from services.dropbox_client import list_folder
+from flask import Blueprint, jsonify
 from utils.config_utils import load_config, save_config, save_last_files
 from utils.logging_utils import log
+from services.dropbox_client import list_folder
+from datetime import datetime, timezone
 
-bp = Blueprint("scan", __name__, url_prefix="/admin")
+bp = Blueprint("scan", __name__, url_prefix="/scan")
 
 
-@bp.route("/scan_inbox", methods=["POST"])
-def scan_inbox():
-    config = load_config()
-    inbox_path = config.get("inbox_path", "/Inbox")
-    last_scan = config.get("last_scan")
-    last_scan_dt = isoparse(last_scan) if last_scan else None
-
+@bp.route("/inbox", methods=["POST"])
+def scan_inbox_manual():
+    """
+    Manual scan of Dropbox Inbox for new Markdown files.
+    ---
+    tags:
+      - Dropbox
+    summary: Scan Inbox (manual)
+    description: |
+      Triggers a manual scan of the Dropbox Inbox folder for `.md` files.
+      Updates `last_scan` and `last_files.json`.
+    responses:
+      200:
+        description: List of newly discovered files
+        content:
+          application/json:
+            example:
+              status: success
+              new_files:
+                - 2025-06-01_test-note.md
+                - 2025-06-02_refactor_patch_test.md
+      500:
+        description: Dropbox error
+    """
     try:
+        config = load_config()
+        inbox_path = config.get("inbox_path")
+
         entries = list_folder(inbox_path)
-        new_files = []
+        new_files = [item["name"] for item in entries if item[".tag"] == "file" and item["name"].endswith(".md")]
 
-        for item in entries:
-            if item[".tag"] == "file":
-                mod_time = isoparse(item["client_modified"])
-                if not last_scan_dt or mod_time > last_scan_dt:
-                    new_files.append(item["name"])
-
+        # Update state
         config["last_scan"] = datetime.now(timezone.utc).isoformat()
         save_config(config)
         save_last_files(new_files)
-        log(f"📥 Scanned inbox: {len(new_files)} new file(s)")
+        log(f"📦 Manual scan: {len(new_files)} file(s)")
 
-        #return jsonify({
-        #    "status": "success",
-        #    "new_files": new_files,
-        #     "count": len(new_files)
-        #}), 200
+        return jsonify({"status": "success", "new_files": new_files}), 200
 
-        return redirect(url_for("admin.dashboard"))  # <- ADICIONE
     except Exception as e:
-        log(f"❌ Error scanning inbox: {str(e)}")
-        flash(f"Error: {str(e)}", "danger")  # mostrar erro na UI
-        return redirect(url_for("admin.dashboard"))  # mesmo em erro
+        log(f"❌ scan error: {str(e)}", level="error")
+        return jsonify({"status": "error", "message": str(e)}), 500

@@ -1,3 +1,5 @@
+# routes/process.py
+
 from flask import Blueprint, request, jsonify
 from services.process_note import process_raw_markdown
 from services import dropbox_client
@@ -9,6 +11,50 @@ process_note_bp = Blueprint("process_note", __name__)
 
 @process_note_bp.route("/process_note", methods=["POST"])
 def handle_process_note():
+    """
+    Process a Markdown file with given YAML front matter and reupload to structured KB path.
+    ---
+    tags:
+      - Process
+    summary: Process raw file into structured note
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - filename
+              - yaml
+            properties:
+              filename:
+                type: string
+                example: 2025-06-30_MinhaNota.md
+              yaml:
+                type: object
+                properties:
+                  title:
+                    type: string
+                    example: Minha Nota
+                  date:
+                    type: string
+                    example: 2025-06-30
+    responses:
+      200:
+        description: File processed and reuploaded
+        content:
+          application/json:
+            example:
+              status: success
+              dropbox_path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-30_minha-nota.md
+              upload: true
+      400:
+        description: Missing fields
+      404:
+        description: File not found in Dropbox Inbox
+      500:
+        description: Server error
+    """
     try:
         data = request.get_json()
         filename = data.get("filename")
@@ -37,6 +83,8 @@ def handle_process_note():
         # Upload
         result = dropbox_client.upload_structured_note(new_path, structured_note)
 
+        log(f"📄 /process_note: Processed and uploaded '{filename}' to '{new_path}'")
+
         return jsonify({
             "status": "success",
             "dropbox_path": new_path,
@@ -44,9 +92,8 @@ def handle_process_note():
         })
 
     except Exception as e:
-        log(f"❌ /process_note error: {str(e)}")
-        print(f"❌ /process_note error: {str(e)}")  # Visible in Render logs
+        log(f"❌ /process_note error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# 👇 This is key for app.py
+# 👇 For app.py import
 process_note = process_note_bp
