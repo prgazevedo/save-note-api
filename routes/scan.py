@@ -15,7 +15,7 @@ def scan_inbox_manual():
     Manual scan of Dropbox Inbox for new Markdown files.
     ---
     tags:
-      - Dropbox
+      - Routes
     summary: Scan Inbox (manual)
     description: |
       Triggers a manual scan of the Dropbox Inbox folder for `.md` files.

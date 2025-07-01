@@ -15,7 +15,7 @@ def handle_process_note():
     Process a Markdown file with given YAML front matter and reupload to structured KB path.
     ---
     tags:
-      - Process
+      - Routes
     summary: Process raw file into structured note
     requestBody:
       required: true

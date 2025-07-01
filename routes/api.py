@@ -17,7 +17,7 @@ def api_scan_inbox():
     Scan Dropbox Inbox for new markdown files.
     ---
     tags:
-      - Dropbox
+      - Routes
     responses:
       200:
         description: Files listed

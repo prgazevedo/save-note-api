@@ -9,7 +9,7 @@ def upload_note():
     Upload a raw note to Dropbox (unstructured).
     ---
     tags:
-      - Dropbox
+      - Routes
     summary: Upload a note
     description: Uploads a note file to the configured Dropbox path based on title and date.
     requestBody:

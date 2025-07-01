@@ -1,50 +1,63 @@
+# utils/logging_utils.py
+
 import os
 import json
 import logging
 from datetime import datetime
 
-# Create data dir (for local usage only)
-os.makedirs("data", exist_ok=True)
+ENV = os.getenv("RENDER", "false").lower()
+IS_RENDER = ENV == "true"
 
-LOG_FILE = os.path.join("data", "admin_log.json")
-FILES_FILE = os.path.join("data", "last_files.json")
-
-# Configure structured stdout logging
+# Structured JSON logs (for Render streaming)
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
 )
+
+# Local file fallback (for dev only)
+DATA_DIR = "data"
+LOG_FILE = os.path.join(DATA_DIR, "admin_log.json")
+FILES_FILE = os.path.join(DATA_DIR, "last_files.json")
+
+if not IS_RENDER:
+    os.makedirs(DATA_DIR, exist_ok=True)
 
 def log(message: str, level: str = "info"):
     """
-    Unified logger for info, warning, error, etc.
-    Outputs to stdout and, if in dev mode, to admin_log.json.
+    Unified logger for all levels.
+    Logs to stdout and (if not on Render) also to admin_log.json.
     """
     timestamp = datetime.utcnow().isoformat()
-    entry = f"[{timestamp}] {level.upper()}: {message}"
+    json_log = {
+        "timestamp": timestamp,
+        "level": level.upper(),
+        "message": message
+    }
 
     # Always log to stdout
     if level == "error":
-        logging.error(message)
+        logging.error(json.dumps(json_log))
     elif level == "warning":
-        logging.warning(message)
+        logging.warning(json.dumps(json_log))
     else:
-        logging.info(message)
+        logging.info(json.dumps(json_log))
 
-    # If running locally, also write to local JSON log
-    if os.getenv("RENDER") != "true":
+    # Only save to local file if not on Render
+    if not IS_RENDER:
         logs = []
         if os.path.exists(LOG_FILE):
             with open(LOG_FILE, "r") as f:
-                logs = json.load(f)
-        logs.insert(0, entry)
+                try:
+                    logs = json.load(f)
+                except json.JSONDecodeError:
+                    logs = []
+        logs.insert(0, f"[{timestamp}] {level.upper()}: {message}")
         logs = logs[:50]
         with open(LOG_FILE, "w") as f:
             json.dump(logs, f, indent=2)
 
 def update_last_files(files: list[str]):
-    """
-    Saves list of recently processed files to local file.
-    """
-    with open(FILES_FILE, "w") as f:
-        json.dump(files, f, indent=2)
+    if not IS_RENDER:
+        with open(FILES_FILE, "w") as f:
+            json.dump(files, f, indent=2)

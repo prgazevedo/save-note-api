@@ -11,7 +11,7 @@ def list_kb():
     List all files in the knowledge base folder.
     ---
     tags:
-      - Dropbox
+      - Routes
     summary: List KB folder
     responses:
       200:
@@ -44,7 +44,7 @@ def list_kb_folder():
     List files inside a specific subfolder in the KB (e.g. `2025-06`).
     ---
     tags:
-      - Dropbox
+      - Routes
     summary: List KB subfolder
     parameters:
       - name: folder

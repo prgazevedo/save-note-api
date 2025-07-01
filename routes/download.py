@@ -10,7 +10,7 @@ def get_kb_note():
     Download a note from the Knowledge Base by filename.
     ---
     tags:
-      - Dropbox
+      - Routes
     summary: Download note
     parameters:
       - name: filename
