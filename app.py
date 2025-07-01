@@ -14,7 +14,9 @@ load_dotenv()
 # Route handlers
 from routes.upload import upload_note
 from routes.list import list_kb, list_kb_folder
-from routes.download import get_kb_note
+from routes.download import get_kb_note, get_inbox_note
+
+
 
 # Blueprints
 from routes.process import process_note
@@ -62,7 +64,7 @@ app.add_url_rule("/save_note", view_func=upload_note, methods=["POST"])
 app.add_url_rule("/list_kb", view_func=list_kb, methods=["GET"])
 app.add_url_rule("/list_kb_folder", view_func=list_kb_folder, methods=["GET"])
 app.add_url_rule("/get_kb_note", view_func=get_kb_note, methods=["GET"])
-
+app.add_url_rule("/get_inbox_note", view_func=get_inbox_note, methods=["GET"])
 # Register blueprints
 app.register_blueprint(process_note)
 app.register_blueprint(auth_bp)

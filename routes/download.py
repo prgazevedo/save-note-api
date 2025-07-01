@@ -1,5 +1,3 @@
-# routes/download.py
-
 from flask import request, jsonify
 from services.dropbox_client import download_note_from_dropbox
 from utils.logging_utils import log
@@ -11,7 +9,7 @@ def get_kb_note():
     ---
     tags:
       - Routes
-    summary: Download note
+    summary: Download note from KB
     parameters:
       - name: filename
         in: query
@@ -43,9 +41,55 @@ def get_kb_note():
         if not content:
             return jsonify({"status": "error", "message": "File not found"}), 404
 
-        log(f"⬇️ Downloaded note: {filename}")
+        log(f"⬇️ Downloaded KB note: {filename}")
         return jsonify({"status": "success", "content": content}), 200
 
     except Exception as e:
-        log(f"❌ download error: {str(e)}", level="error")
+        log(f"❌ download KB error: {str(e)}", level="error")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def get_inbox_note():
+    """
+    Download a raw note from the Dropbox Inbox folder.
+    ---
+    tags:
+      - Routes
+    summary: Download note from Inbox
+    parameters:
+      - name: filename
+        in: query
+        required: true
+        schema:
+          type: string
+        description: Name of the file to download from Inbox (e.g., README.md)
+    responses:
+      200:
+        description: File downloaded successfully
+        content:
+          application/json:
+            example:
+              status: success
+              content: "# Raw Markdown content..."
+      400:
+        description: Missing filename parameter
+      404:
+        description: File not found in Inbox
+      500:
+        description: Unexpected error
+    """
+    filename = request.args.get("filename")
+    if not filename:
+        return jsonify({"status": "error", "message": "Missing filename parameter"}), 400
+
+    try:
+        content = download_note_from_dropbox(filename, folder="Inbox")
+        if not content:
+            return jsonify({"status": "error", "message": "File not found"}), 404
+
+        log(f"📥 Downloaded Inbox note: {filename}")
+        return jsonify({"status": "success", "content": content}), 200
+
+    except Exception as e:
+        log(f"❌ download Inbox error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
