@@ -2,78 +2,48 @@
 
 **SaveNotesGPT** is a lightweight, extensible platform for converting handwritten notes, daily entries, and research logs into structured, metadata-rich Markdown files. These notes are safely archived in Dropbox and semantically indexed using GPT — forming a durable, searchable personal knowledge base.
 
-This project is part of a broader **Personal Knowledge Infrastructure**, built to support long-term memory, reflection, and insight retrieval across platforms like Obsidian, Craft, and ChatGPT.
+This project is part of a broader **Personal Knowledge Infrastructure**, built to support long-term memory, reflection, and insight retrieval across platforms like Obsidian and ChatGPT.
 
 ---
 
-## 🚀 Vision
+## 📡 System Overview
 
 Enable a fluid pipeline where:
 
 1. Notes are written in any format — by hand or typed  
-2. GPT structures them with metadata, tags, summaries  
+2. GPT is used to append them with metadata, tags, summaries  
 3. They are saved in Markdown with standard YAML frontmatter  
 4. Archived in Dropbox under date-based folders  
 5. Queried later using GPT or Obsidian-style tools
 
 ---
 
-## 📡 System Overview
-
-| Component      | Description                                         |
-|----------------|-----------------------------------------------------|
-| **Capture**    | Daily logs, work notes, research snippets           |
-| **Processing** | GPT-generated metadata + summary                    |
-| **API Backend**| Flask microservice on Render                        |
-| **Storage**    | Dropbox with date-based folders                     |
-| **Format**     | Markdown .md with Obsidian/Craft-compatible YAML    |
-| **Semantic Layer** | Embeddings + GPT vector search (planned)       |
-
----
-
 ## 🔄 Processing Modes
 
-### 1️⃣ Push Metadata (external GPT adds metadata)
+### 📤 Push Mode (GPT sends metadata)
 
-JarbasGPT or other client generates and sends full YAML:
-
-`POST /api/process_note`
-
-```json
-{
-  "filename": "2025-07-01_Meeting.md",
-  "yaml": {
-    "title": "Team Sync Notes",
-    "date": "2025-07-01",
-    "tags": ["team", "sync"],
-    "author": "me",
-    "summary": "Discussion of Q3 priorities and release plans."
-  }
-}
-```
-
-→ System reads the raw note from Dropbox Inbox, prepends YAML, archives to `/NotesKB/YYYY-MM/`.  
-🔧 Implemented via: `archive_note_with_yaml()` in `process_service.py`
+In this mode, an external GPT (e.g., `JarbasGPT`) performs metadata generation and pushes notes to the system.
+→GPT reads the raw note from Dropbox Inbox, prepends YAML, archives to `/NotesKB/YYYY-MM/`. 
+1. GPT calls `/api/scan_inbox` to list new files in the Inbox
+2. For each file, GPT uses `/get_inbox_note` to fetch raw Markdown content
+3. GPT generates YAML metadata (title, date, tags, etc.)
+4. Then calls:
+   - `POST /process_note` → if file exists in Inbox and needs metadata injection
+   - `POST /save_note` → if GPT generated the full Markdown already
 
 ---
+### 📥 Pull Mode (App generates metadata using GPT)
 
-### 2️⃣ Pull Metadata (API extracts via GPT)
+In this mode, the system automatically generates metadata using GPT calls.
 
-**Coming soon.**
+1. App calls `/api/scan_inbox` to detect new raw notes
+2. For each, the backend:
+   - Downloads file via Dropbox API
+   - Sends content to OpenAI/GPT
+   - Extracts title, date, tags, summary, etc.
+3. App then injects the YAML and archives it using `/process_note`
 
-`POST /api/process_file`
-
-```json
-{
-  "filename": "README.md"
-}
-```
-
-→ System will:
-
-- Read note from Dropbox inbox  
-- Parse or request GPT to generate YAML metadata  
-- Archive to KB folder
+✅ This allows the app to function without GPT actively pushing notes — enabling full automation, batch processing, or scheduled runs.
 
 ---
 
@@ -138,21 +108,6 @@ Structured logging is handled via `logging_utils.py`:
 
 All logs are JSON-structured to support Logtail ingestion and Render streaming.
 
----
-
-## 🧪 Status
-
-| Feature                         | State     |
-|----------------------------------|-----------|
-| Dropbox API File Upload         | ✅ Stable |
-| GPT to Markdown Structuring Flow| ✅ Manual |
-| GPT Metadata Injection          | ✅ Working|
-| Obsidian/Craft Metadata Compatibility | ✅ Working |
-| File Browser APIs               | ✅ Working |
-| Embedded Swagger API Docs      | ✅ Working |
-| Logtail Integration             | ✅ Working |
-| Embedding + Semantic Search     | 🔜 Planned|
-| Batch GPT Processing Queue      | 🔜 Planned|
 
 ---
 
@@ -225,14 +180,6 @@ python app.py
   - Triggering inbox scan
   - Viewing logs and recent files
 
----
-
-## 🧭 Roadmap
-
-- `GET /list_inbox_notes` to find unprocessed files
-- GPT-assisted batch processing via `/process_note`
-- Embed notes into vector DB for GPT-powered semantic search
-- SwiftBar/iOS Shortcuts integrations for upload
 
 ---
 
