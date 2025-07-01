@@ -47,7 +47,9 @@ swagger_template = {
     "info": {
         "title": "SaveNotesGPT API",
         "version": "0.1.0",
-        "description": "API for managing Markdown notes with Dropbox.\n\n👉 [📖 View README](https://github.com/your-org/save-note-api/blob/main/README.md)",
+        "description": (
+            "API for managing Markdown notes with Dropbox.\n\n"
+            "👉 [📖 View README](https://github.com/prgazevedo/save-note-api/blob/main/README.md)"
     }
 }
 
