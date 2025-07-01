@@ -6,27 +6,28 @@ import logging
 from datetime import datetime
 from logtail import LogtailHandler
 
-# Environment detection
+# Environment flags
 IS_RENDER = os.getenv("RENDER", "false").lower() == "true"
 LOGTAIL_TOKEN = os.getenv("LOGTAIL_TOKEN")
 
-# Configure logger
+# Configure main logger
 logger = logging.getLogger("SaveNotesLogger")
 logger.setLevel(logging.INFO)
 
-# Log to stdout
+# Log to stdout (Render captures this)
 stdout_handler = logging.StreamHandler()
 stdout_handler.setFormatter(logging.Formatter(
     fmt="%(asctime)s [%(levelname)s] %(message)s"
 ))
 logger.addHandler(stdout_handler)
 
-# Log to Logtail if token is set
+# Log to Logtail (if token is present)
 if LOGTAIL_TOKEN:
     logtail_handler = LogtailHandler(source_token=LOGTAIL_TOKEN)
+    logtail_handler.setFormatter(logging.Formatter(fmt="%(message)s"))  # Keep Logtail clean
     logger.addHandler(logtail_handler)
 
-# Local dev: save logs to JSON file
+# Local fallback files (only for local/dev)
 DATA_DIR = "data"
 LOG_FILE = os.path.join(DATA_DIR, "admin_log.json")
 FILES_FILE = os.path.join(DATA_DIR, "last_files.json")
@@ -36,16 +37,16 @@ if not IS_RENDER:
 
 def log(message: str, level: str = "info"):
     """
-    Logs to stdout, Logtail (if enabled), and local file (if dev).
+    Logs to stdout, Logtail (if available), and a local file (if dev).
     """
     timestamp = datetime.utcnow().isoformat()
     json_log = {
         "timestamp": timestamp,
         "level": level.upper(),
-        "message": message,
+        "message": message
     }
 
-    # Dispatch to logger
+    # Structured log to handlers
     if level == "error":
         logger.error(json_log)
     elif level == "warning":
@@ -53,7 +54,7 @@ def log(message: str, level: str = "info"):
     else:
         logger.info(json_log)
 
-    # Also save to file (if dev)
+    # Local JSON file (dev only)
     if not IS_RENDER:
         try:
             logs = []

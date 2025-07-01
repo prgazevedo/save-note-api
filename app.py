@@ -4,6 +4,7 @@ import os
 from flask import Flask, redirect, url_for, jsonify
 from dotenv import load_dotenv
 from flasgger import Swagger
+from utils.logging_utils import log
 
 from utils.config_utils import load_config, load_logs, load_last_files
 
