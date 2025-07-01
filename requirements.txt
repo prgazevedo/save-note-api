@@ -1,8 +1,9 @@
-flask
-flask-login
-flask-wtf
-requests
-python-dotenv
-pyyaml
-openai
-python-dateutil
+flask==2.3.3
+flask-login==0.6.3
+flask-wtf==1.1.1
+requests==2.31.0
+python-dotenv==1.0.1
+pyyaml==6.0.1
+openai==1.30.1
+python-dateutil==2.9.0.post0
+flasgger==0.9.7.1

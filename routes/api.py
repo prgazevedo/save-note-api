@@ -13,9 +13,25 @@ bp = Blueprint("api", __name__, url_prefix="/api")
 
 @bp.route("/scan_inbox", methods=["POST"])
 def api_scan_inbox():
+@bp.route("/api/scan_inbox", methods=["POST"])
+def api_scan_inbox():
     """
-    Lista ficheiros .md novos no inbox desde o último scan.
-    Retorna lista de nomes.
+    Scan Dropbox Inbox for new markdown files.
+    ---
+    tags:
+      - Dropbox
+    responses:
+      200:
+        description: Files listed
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+            new_files:
+              type: array
+              items:
+                type: string
     """
     config = load_config()
     inbox_path = config.get("inbox_path")

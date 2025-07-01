@@ -2,6 +2,7 @@ import os
 from flask import Flask, redirect, url_for, jsonify
 from dotenv import load_dotenv
 from utils.config_utils import load_config, load_logs, load_last_files
+from flasgger import Swagger
 
 # Load .env if running locally (e.g., Codespaces)
 load_dotenv()
@@ -19,6 +20,8 @@ from routes.scan import bp as scan_bp
 from routes.api import bp as api_bp
 
 app = Flask(__name__)
+swagger = Swagger(app)
+
 
 # Secure key for session cookies (used by Flask-Login)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-insecure-default")
