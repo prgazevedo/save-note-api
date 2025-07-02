@@ -3,20 +3,17 @@ cd "$(dirname "$0")/.." || exit 1
 
 echo "🚀 Starting SaveNotesGPT local test..."
 
-# Force mock mode for local test
+# Enable mock mode for Dropbox etc
 export MOCK_MODE=1
 
-# Load token from .tokens file
-if [ -f ".tokens" ]; then
-  export $(grep GPT_TOKEN .tokens | xargs)
-else
-  echo "❌ .tokens file not found!"
-  exit 1
-fi
-
+# Use token from environment if present, otherwise fallback to .tokens
 if [ -z "$GPT_TOKEN" ]; then
-  echo "❌ GPT_TOKEN not set in .tokens"
-  exit 1
+  if [ -f ".tokens" ]; then
+    export $(grep GPT_TOKEN .tokens | xargs)
+  else
+    echo "❌ GPT_TOKEN not set and .tokens file not found!"
+    exit 1
+  fi
 fi
 
 # Activate virtual environment
@@ -27,12 +24,12 @@ else
   exit 1
 fi
 
-# Start Flask in background
+# Start Flask app in background
 echo "⚙️ Starting Flask..."
 FLASK_APP=app.py flask run > flask.log 2>&1 &
 FLASK_PID=$!
 
-# Wait for Flask
+# Wait for Flask to become available
 TIMEOUT=10
 for i in $(seq 1 $TIMEOUT); do
   if curl -s http://localhost:5000/ > /dev/null; then
@@ -41,7 +38,7 @@ for i in $(seq 1 $TIMEOUT); do
   fi
 
   if ! kill -0 $FLASK_PID 2>/dev/null; then
-    echo "❌ Flask failed to start. See flask.log:"
+    echo "❌ Flask failed to start. Showing last 40 lines of flask.log:"
     tail -n 40 flask.log
     exit 1
   fi
@@ -51,6 +48,7 @@ done
 
 echo "📡 Testing endpoints..."
 
+# Function to test an endpoint with token
 function test_endpoint() {
   local name="$1"
   local method="$2"
@@ -78,7 +76,7 @@ test_endpoint "📚 List KB notes" GET http://localhost:5000/api/kb/notes
 test_endpoint "📚 List KB subfolder" GET http://localhost:5000/api/kb/notes/folder?folder=2025-06
 test_endpoint "📚 Download KB note" GET http://localhost:5000/api/kb/notes/2025-06-30_MinhaNota.md
 
-# Stop Flask
+# Cleanup
 echo -e "\n🛑 Stopping Flask (PID $FLASK_PID)"
 kill $FLASK_PID
 sleep 1

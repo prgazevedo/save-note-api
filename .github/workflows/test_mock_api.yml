@@ -24,20 +24,15 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
 
-      - name: 🧪 Run Flask in mock mode
+      - name: 🧪 Run mock API tests
         env:
           FLASK_APP: app.py
           FLASK_ENV: development
           MOCK_MODE: 1
-          GPT_BEARER_TOKEN: sk-GPT-MOCK
+          GPT_TOKEN: sk-GPT-MOCK
           FLASK_SECRET_KEY: test-secret
           ADMIN_USERNAME: admin
           ADMIN_PASSWORD: test1234
         run: |
-          source venv/bin/activate
-          nohup flask run > flask.log 2>&1 &
-          FLASK_PID=$!
-          echo "Waiting for Flask..."
-          sleep 5
-          curl --fail http://localhost:5000/ || (cat flask.log && exit 1)
-          kill $FLASK_PID
+          chmod +x ./scripts/test_local_api.sh
+          ./scripts/test_local_api.sh
