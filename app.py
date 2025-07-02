@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flasgger import Swagger
 from utils.logging_utils import log
 from utils.config_utils import load_config, load_logs, load_last_files
+from flask import Flask, send_from_directory
 
 # Load local .env for dev
 load_dotenv()
@@ -17,7 +18,7 @@ from routes.upload import upload_note_api
 from routes.download import download_routes
 from routes.list import kb_notes_list_routes
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-insecure-default")
 
 # Swagger setup
@@ -84,7 +85,10 @@ else:
 @app.route("/")
 def health_check():
     return jsonify({"status": "ok", "version": "v3.0.0"})
-
+# Serve ai plugin route
+@app.route('/.well-known/ai-plugin.json')
+def serve_ai_plugin():
+    return send_from_directory("static/.well-known", "ai-plugin.json", mimetype='application/json')
 
 def startup_log():
     lines = [
