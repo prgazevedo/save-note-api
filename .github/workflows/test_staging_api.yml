@@ -1,0 +1,33 @@
+name: Staging API Test
+
+on:
+  push:
+    branches: [main, refactor_api]
+
+jobs:
+  staging-test:
+    name: 🌍 Test Render Staging API
+    runs-on: ubuntu-latest
+    env:
+      GPT_TOKEN: ${{ secrets.GPT_TOKEN }}  # from repo secrets
+
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v3
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: ⚙️ Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install jq
+
+      - name: 🧪 Run staging API test
+        run: |
+          chmod +x ./scripts/test_staging_api.sh
+          ./scripts/test_staging_api.sh
