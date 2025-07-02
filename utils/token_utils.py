@@ -1,8 +1,10 @@
 import os
 from flask import request, jsonify
+from dotenv import load_dotenv
 
-# Load token from env or config file
-GPT_AUTH_TOKEN = os.getenv("GPT_BEARER_TOKEN")
+# Load GPT token from .tokens file
+load_dotenv(dotenv_path=".tokens")
+GPT_AUTH_TOKEN = os.getenv("GPT_TOKEN")  # Just the token string, no "Bearer"
 
 def require_token(func):
     from functools import wraps

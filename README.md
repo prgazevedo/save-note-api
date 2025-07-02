@@ -75,14 +75,23 @@ To connect **JarbasGPT** with your API backend and enable semantic note processi
 
 ### 📡 Supported API Actions
 
-| Operation         | Path                        | Description                                  |
-|------------------|-----------------------------|----------------------------------------------|
-| `scan_inbox`     | `POST /api/scan_inbox`      | List Markdown files in Inbox                 |
-| `get_inbox_note` | `GET /api/get_inbox_note`   | Fetch raw Markdown content from Inbox        |
-| `process_note`   | `POST /api/process_note`    | Inject metadata and archive a note           |
-| `save_note`      | `POST /api/save_note`       | Upload full Markdown note with frontmatter   |
+- | Operation         | Path                        | Description                                  |
+- |------------------|-----------------------------|----------------------------------------------|
+- | `scan_inbox`     | `POST /api/scan_inbox`      | List Markdown files in Inbox                 |
+- | `get_inbox_note` | `GET /api/get_inbox_note`   | Fetch raw Markdown content from Inbox        |
+- | `process_note`   | `POST /api/process_note`    | Inject metadata and archive a note           |
+- | `save_note`      | `POST /api/save_note`       | Upload full Markdown note with frontmatter   |
 
-> 📌 **Note:** The schema must be publicly accessible on GitHub and committed to the `main` branch.
++ | Operation              | Method & Path                                     | Description                                    |
++ |------------------------|---------------------------------------------------|------------------------------------------------|
++ | `list_inbox_files`     | `GET /api/inbox/files`                            | List new `.md` files since last scan           |
++ | `get_inbox_note`       | `GET /api/inbox/notes/{filename}`                | Fetch raw Markdown content from Inbox          |
++ | `process_inbox_note`   | `POST /api/inbox/notes/{filename}/process`       | Inject metadata and archive the file           |
++ | `list_kb_notes`        | `GET /api/kb/notes`                               | List all KB notes                              |
++ | `list_kb_subfolder`    | `GET /api/kb/notes/folder?folder=YYYY-MM`        | List `.md` files in a specific KB subfolder    |
++ | `get_kb_note`          | `GET /api/kb/notes/{filename}`                  | Retrieve note content from KB by filename      |
++ | `save_note`            | `POST /api/kb/notes`                              | Upload full Markdown note with YAML metadata   |
+
 
 ---
 
@@ -104,13 +113,7 @@ ___
 Stored at:  
 `/Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-01_Work_Log_Backend_Refactor.md`
 
----
 
-## 📂 Folder Navigation (via API)
-
-- `GET /list_kb` → returns: `["2025-05", "2025-06"]`
-- `GET /list_kb_folder?folder=2025-06` → lists all `.md` files in the folder
-- `GET /get_kb_note?filename=...` → returns raw Markdown
 
 ---
 
@@ -128,13 +131,24 @@ Stored at:
 
 ---
 
-## 🔐 Authentication
+## 🔐 Login and admin Authentication
 
 - `/login` and `/admin/dashboard` protected by session login
 - Environment variables:
   - `ADMIN_USERNAME`
   - `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`
   - `FLASK_SECRET_KEY`
+
+## 🔐 Token Authentication for GPT API Access
+
+All `/api/*` endpoints require a valid `Authorization: Bearer ...` token in the request header.
+
+The token is stored **securely in `.tokens`** file during local dev and as environment variable in production.
+
+### 🔐 In `.tokens` file
+
+```env
+GPT_TOKEN=sk-GPT-YourSecureTokenHere
 
 ---
 
