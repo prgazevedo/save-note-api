@@ -5,6 +5,10 @@
 This project is part of a broader **Personal Knowledge Infrastructure**, built to support long-term memory, reflection, and insight retrieval across platforms like Obsidian and ChatGPT.
 
 ---
+## Project Status
+[![CI Status](https://github.com/prgazevedo/save-note-api/actions/workflows/test_mock_api.yml/badge.svg)](https://github.com/prgazevedo/save-note-api/actions/workflows/test_mock_api.yml)
+
+---
 
 ## 📡 System Overview
 
