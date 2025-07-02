@@ -1,22 +1,24 @@
 #!/bin/bash
-set -e
-
 STAGING_URL="https://save-note-api.onrender.com"
+NOTE_FILE="2025-06-01_Test-Note.md"
 
 echo "🌍 Testing staging @ $STAGING_URL"
+echo "🔐 Loading token from .tokens"
 
-# 🪪 Load GPT_TOKEN (from .tokens or fallback to env, e.g. GitHub Actions)
+# Load token from .tokens
 if [ -f ".tokens" ]; then
-  echo "🔐 Loading token from .tokens"
   export $(grep GPT_TOKEN .tokens | xargs)
-fi
-
-if [ -z "$GPT_TOKEN" ]; then
-  echo "❌ GPT_TOKEN is not set! Provide it via .tokens or environment."
+else
+  echo "❌ .tokens file not found!"
   exit 1
 fi
 
-# 🧪 Test helper
+if [ -z "$GPT_TOKEN" ]; then
+  echo "❌ GPT_TOKEN not set in .tokens"
+  exit 1
+fi
+
+# Test helper
 function test_endpoint() {
   local name="$1"
   local path="$2"
@@ -37,15 +39,15 @@ function test_endpoint() {
   echo "$RESPONSE" | jq . 2>/dev/null || echo "$RESPONSE"
 }
 
-# 📥 Inbox Notes
+# Inbox Notes
 test_endpoint "📥 List Inbox files" "/api/inbox/files" GET
 test_endpoint "📥 List new Inbox notes" "/api/inbox/notes/new" GET
-test_endpoint "📥 Download Inbox note" "/api/inbox/notes/2025-06-30_MinhaNota.md" GET
-test_endpoint "📥 Process Inbox note" "/api/inbox/notes/2025-06-30_MinhaNota.md/process" POST '{}'
+test_endpoint "📥 Download Inbox note" "/api/inbox/notes/$NOTE_FILE" GET
+test_endpoint "📥 Process Inbox note" "/api/inbox/notes/$NOTE_FILE/process" POST '{}'
 
-# 📚 Knowledge Base Notes
+# Knowledge Base Notes
 test_endpoint "📚 List KB notes" "/api/kb/notes" GET
 test_endpoint "📚 List KB subfolder" "/api/kb/notes/folder?folder=2025-06" GET
-test_endpoint "📚 Download KB note" "/api/kb/notes/2025-06-30_MinhaNota.md" GET
+test_endpoint "📚 Download KB note" "/api/kb/notes/$NOTE_FILE" GET
 
 echo -e "\n✅ Staging test complete!"
