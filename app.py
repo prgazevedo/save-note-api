@@ -5,7 +5,7 @@ from flasgger import Swagger
 from utils.logging_utils import log
 from utils.config_utils import load_config, load_logs, load_last_files
 from flask import Flask, send_from_directory
-
+from flask import Flask, jsonify, Response
 # Load local .env for dev
 load_dotenv()
 
@@ -88,10 +88,16 @@ def health_check():
 # Serve ai plugin route
 @app.route('/.well-known/ai-plugin.json')
 def serve_ai_plugin():
-    return send_from_directory("static/.well-known", "ai-plugin.json", mimetype='application/json')
+    with open("static/.well-known/ai-plugin.json") as f:
+        data = json.load(f)
+    return Response(json.dumps(data), mimetype="application/json")
+
+# Serve OpenAPI JSON with correct MIME type
 @app.route("/gpt/jarbas_openapi.json")
 def serve_openapi():
-    return send_from_directory("static/gpt", "jarbas_openapi.json", mimetype="application/json")
+    with open("static/gpt/jarbas_openapi.json") as f:
+        data = json.load(f)
+    return Response(json.dumps(data), mimetype="application/json")
 
 def startup_log():
     lines = [
