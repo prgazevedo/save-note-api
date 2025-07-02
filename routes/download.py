@@ -1,46 +1,40 @@
-# routes/download.py
-
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, jsonify
 from services.dropbox_client import download_note_from_dropbox
 from utils.logging_utils import log
+from utils.token_utils import require_token
 
 download_bp = Blueprint("download", __name__, url_prefix="/api")
 
 
-@download_bp.route("/get_kb_note", methods=["GET"])
-def get_kb_note():
+@download_bp.route("/kb/notes/<filename>", methods=["GET"])
+@require_token
+def get_kb_note(filename):
     """
-    Download a note from the Knowledge Base by filename.
+    Download a note from the Knowledge Base.
     ---
     tags:
-      - Routes
-    summary: Download note from KB
+      - Knowledge Base Notes
+    summary: Get KB note by filename
     parameters:
       - name: filename
-        in: query
+        in: path
         required: true
         schema:
           type: string
-        description: Name of the file to download (e.g., 2025-06-01_test.md)
+        description: Filename (e.g. 2025-06-01_test.md)
     responses:
       200:
-        description: File downloaded successfully
+        description: File downloaded
         content:
           application/json:
             example:
               status: success
               content: "# Markdown content..."
-      400:
-        description: Missing filename parameter
       404:
         description: File not found
       500:
-        description: Unexpected error
+        description: Server error
     """
-    filename = request.args.get("filename")
-    if not filename:
-        return jsonify({"status": "error", "message": "Missing filename parameter"}), 400
-
     try:
         content = download_note_from_dropbox(filename)
         if not content:
@@ -50,44 +44,39 @@ def get_kb_note():
         return jsonify({"status": "success", "content": content}), 200
 
     except Exception as e:
-        log(f"❌ download KB error: {str(e)}", level="error")
+        log(f"❌ KB download error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-@download_bp.route("/get_inbox_note", methods=["GET"])
-def get_inbox_note():
+@download_bp.route("/inbox/notes/<filename>", methods=["GET"])
+@require_token
+def get_inbox_note(filename):
     """
     Download a raw note from the Dropbox Inbox folder.
     ---
     tags:
-      - Routes
-    summary: Download note from Inbox
+      - Inbox Notes
+    summary: Get Inbox note by filename
     parameters:
       - name: filename
-        in: query
+        in: path
         required: true
         schema:
           type: string
-        description: Name of the file to download from Inbox (e.g., README.md)
+        description: Filename to fetch (e.g. README.md)
     responses:
       200:
-        description: File downloaded successfully
+        description: File downloaded
         content:
           application/json:
             example:
               status: success
               content: "# Raw Markdown content..."
-      400:
-        description: Missing filename parameter
       404:
-        description: File not found in Inbox
+        description: File not found
       500:
-        description: Unexpected error
+        description: Server error
     """
-    filename = request.args.get("filename")
-    if not filename:
-        return jsonify({"status": "error", "message": "Missing filename parameter"}), 400
-
     try:
         content = download_note_from_dropbox(filename, folder="Inbox")
         if not content:
@@ -97,7 +86,7 @@ def get_inbox_note():
         return jsonify({"status": "success", "content": content}), 200
 
     except Exception as e:
-        log(f"❌ download Inbox error: {str(e)}", level="error")
+        log(f"❌ Inbox download error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 

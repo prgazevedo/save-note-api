@@ -9,14 +9,13 @@ from utils.config_utils import load_config, load_logs, load_last_files
 load_dotenv()
 
 # Route handlers (blueprints and views)
-from routes.process import process_note
+from routes.process import process_note_routes
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
-from routes.scan import bp as scan_bp
-from routes.api import bp as api_bp
+from routes.scan import inbox_files_routes
 from routes.upload import upload_note_api
 from routes.download import download_routes
-from routes.list import list_kb, list_kb_folder
+from routes.list import kb_notes_list_routes
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-insecure-default")
@@ -50,18 +49,16 @@ swagger_template = {
 
 Swagger(app, config=swagger_config, template=swagger_template)
 
-# ✅ Function-based list endpoints (optional to move to blueprint later)
-app.add_url_rule("/list_kb", view_func=list_kb, methods=["GET"])
-app.add_url_rule("/list_kb_folder", view_func=list_kb_folder, methods=["GET"])
+
 
 # ✅ Register blueprints (all under /api)
-app.register_blueprint(process_note)
+app.register_blueprint(process_note_routes)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
-app.register_blueprint(scan_bp)
-app.register_blueprint(api_bp)
+app.register_blueprint(inbox_files_routes)
 app.register_blueprint(download_routes)
 app.register_blueprint(upload_note_api)
+app.register_blueprint(kb_notes_list_routes)
 
 # Initial load
 load_config()
@@ -88,12 +85,20 @@ else:
 def health_check():
     return jsonify({"status": "ok", "version": "v3.0.0"})
 
+
+def startup_log():
+    lines = [
+        "✅ SaveNotesGPT is starting...",
+        "📚 API Docs:    https://save-note-api.onrender.com/apidocs/",
+        "🔐 Admin Panel: https://save-note-api.onrender.com/admin/dashboard",
+    ]
+    if not os.getenv("RENDER"):
+        for line in lines:
+            print(line)
+    for line in lines:
+        log(line, level="info")
+
 # Start Flask app
 if __name__ == "__main__":
-    print("✅ SaveNotesGPT is starting...")
-    print("📚 API Docs:    https://save-note-api.onrender.com/apidocs/")
-    print("🔐 Admin Panel: https://save-note-api.onrender.com/admin/dashboard")
-    log("✅ SaveNotesGPT is starting...", level="info")
-    log("📚 API Docs:    https://save-note-api.onrender.com/apidocs/", level="info")
-    log("🔐 Admin Panel: https://save-note-api.onrender.com/admin/dashboard", level="info")
+    startup_log()
     app.run(host="0.0.0.0", port=5000, debug=True)

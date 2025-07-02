@@ -1,28 +1,28 @@
-# routes/scan.py
+# routes/inbox_files.py
 
 from flask import Blueprint, jsonify
 from utils.config_utils import load_config, save_config, save_last_files
 from utils.logging_utils import log
 from services.dropbox_client import list_folder
+from utils.token_utils import require_token
 from datetime import datetime, timezone
 
-bp = Blueprint("scan", __name__, url_prefix="/scan")
+inbox_files_bp = Blueprint("inbox_files", __name__, url_prefix="/api/inbox")
 
 
-@bp.route("/inbox", methods=["POST"])
-def scan_inbox_manual():
+@inbox_files_bp.route("/files", methods=["GET"])
+@require_token
+def list_inbox_files():
     """
-    Manual scan of Dropbox Inbox for new Markdown files.
+    List all Markdown files in the Dropbox Inbox.
     ---
     tags:
-      - Routes
-    summary: Scan Inbox (manual)
-    description: |
-      Triggers a manual scan of the Dropbox Inbox folder for `.md` files.
-      Updates `last_scan` and `last_files.json`.
+      - Inbox Notes
+    summary: List Inbox Files
+    description: Returns a list of `.md` files found in the Dropbox Inbox folder.
     responses:
       200:
-        description: List of newly discovered files
+        description: List of discovered files
         content:
           application/json:
             example:
@@ -40,14 +40,18 @@ def scan_inbox_manual():
         entries = list_folder(inbox_path)
         new_files = [item["name"] for item in entries if item[".tag"] == "file" and item["name"].endswith(".md")]
 
-        # Update state
+        # Update local state
         config["last_scan"] = datetime.now(timezone.utc).isoformat()
         save_config(config)
         save_last_files(new_files)
-        log(f"📦 Manual scan: {len(new_files)} file(s)")
 
+        log(f"📦 Listed inbox: {len(new_files)} file(s)")
         return jsonify({"status": "success", "new_files": new_files}), 200
 
     except Exception as e:
-        log(f"❌ scan error: {str(e)}", level="error")
+        log(f"❌ list inbox files error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# 👇 For app.py
+inbox_files_routes = inbox_files_bp

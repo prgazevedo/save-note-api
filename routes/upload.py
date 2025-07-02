@@ -1,20 +1,21 @@
-# routes/upload.py
-
 from flask import Blueprint, request, jsonify
 from services.dropbox_client import upload_note_to_dropbox
 from utils.logging_utils import log
+from utils.token_utils import require_token
 
+# All routes under /api
 upload_note_bp = Blueprint("upload_note", __name__, url_prefix="/api")
 
-@upload_note_bp.route("/save_note", methods=["POST"])
+@upload_note_bp.route("/inbox/notes", methods=["POST"])
+@require_token
 def upload_note():
     """
-    Upload a raw note to Dropbox (unstructured).
+    Upload a raw Markdown note to Dropbox Inbox.
     ---
     tags:
-      - Routes
-    summary: Upload a note
-    description: Uploads a note file to the configured Dropbox path based on title and date.
+      - Inbox Notes
+    summary: Upload raw note to Inbox
+    description: Receives a Markdown file with basic metadata and uploads it to the unstructured Dropbox Inbox folder.
     requestBody:
       required: true
       content:
@@ -28,13 +29,14 @@ def upload_note():
             properties:
               title:
                 type: string
-                example: Minha Nota
+                example: Test Note
               date:
                 type: string
+                format: date
                 example: 2025-07-01
               content:
                 type: string
-                example: "# Título\n\nEste é o conteúdo da nota"
+                example: "# Title\n\nThis is the note content."
     responses:
       200:
         description: Note uploaded successfully
@@ -71,15 +73,16 @@ def upload_note():
         success = upload_note_to_dropbox(title, date, content)
 
         if success:
-            log(f"📤 Note uploaded: {title} ({date})")
+            log(f"📤 Note uploaded to Inbox: {title} ({date})")
             return jsonify({"status": "success", "message": "Note uploaded to Dropbox."}), 200
         else:
-            log(f"❌ Upload failed for: {title} ({date})", level="error")
+            log(f"❌ Upload failed: {title} ({date})", level="error")
             return jsonify({"status": "error", "message": "Failed to upload note."}), 500
 
     except Exception as e:
-        log(f"❌ Exception during note upload: {str(e)}", level="error")
+        log(f"❌ Exception during upload: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 # 👇 For app.py import
 upload_note_api = upload_note_bp

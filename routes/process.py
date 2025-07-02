@@ -3,18 +3,28 @@ from services.process_service import archive_note_with_yaml
 from services import dropbox_client
 from utils.dropbox_utils import generate_yaml_front_matter, sanitize_filename
 from utils.logging_utils import log
+from utils.token_utils import require_token
 from datetime import datetime
 
-process_note_bp = Blueprint("process_note", __name__, url_prefix="/api")
+process_bp = Blueprint("process", __name__, url_prefix="/api/inbox/notes")
 
-@process_note_bp.route("/process_note", methods=["POST"])
-def handle_process_note():
+@process_bp.route("/<filename>/process", methods=["POST"])
+@require_token
+def process_note(filename):
     """
-    Process a Markdown file with given YAML front matter and reupload to structured KB path.
+    Process a note from the Inbox by injecting YAML metadata and archiving to the Knowledge Base.
     ---
     tags:
-      - Routes
-    summary: Process raw file into structured note
+      - Inbox Notes
+    summary: Process and archive a note
+    description: Takes a note in the Inbox, injects YAML frontmatter, and moves it to the structured KB folder.
+    parameters:
+      - name: filename
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Name of the file to process (e.g., README.md)
     requestBody:
       required: true
       content:
@@ -22,78 +32,88 @@ def handle_process_note():
           schema:
             type: object
             required:
-              - filename
               - yaml
             properties:
-              filename:
-                type: string
-                example: 2025-06-30_MinhaNota.md
               yaml:
                 type: object
                 properties:
                   title:
                     type: string
-                    example: Minha Nota
                   date:
                     type: string
-                    example: 2025-06-30
+                    format: date
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                  author:
+                    type: string
+                  source:
+                    type: string
+                  type:
+                    type: string
+                  uid:
+                    type: string
+                  status:
+                    type: string
+                  linked_files:
+                    type: array
+                    items:
+                      type: string
+                  language:
+                    type: string
+                  summary:
+                    type: string
     responses:
       200:
-        description: File processed and reuploaded
+        description: Note processed and archived
         content:
           application/json:
             example:
               status: success
-              dropbox_path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-30_minha-nota.md
+              dropbox_path: /Apps/SaveNotesGPT/NotesKB/2025-07/2025-07-01_readme.md
               upload: true
       400:
-        description: Missing fields
+        description: Missing required fields
       404:
-        description: File not found in Dropbox Inbox
+        description: File not found
       500:
-        description: Server error
+        description: Internal error
     """
     try:
         data = request.get_json()
-        filename = data.get("filename")
         yaml_fields = data.get("yaml")
 
         if not filename or not yaml_fields:
             return jsonify({"status": "error", "message": "Missing filename or YAML metadata"}), 400
 
-        # ✅ Validate date format
+        # ✅ Validate date
         date_str = yaml_fields.get("date")
         if not date_str:
-            return jsonify({"status": "error", "message": "Missing 'date' in YAML metadata"}), 400
+            return jsonify({"status": "error", "message": "Missing 'date' in YAML"}), 400
 
         try:
             parsed_date = datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
-            return jsonify({
-                "status": "error",
-                "message": f"Invalid 'date' format: '{date_str}'. Expected YYYY-MM-DD."
-            }), 400
+            return jsonify({"status": "error", "message": f"Invalid date format: {date_str}. Use YYYY-MM-DD"}), 400
 
-        # Fetch original markdown from Dropbox Inbox
+        # ⬇️ Load original MD from Dropbox Inbox
         original_md = dropbox_client.download_note_from_dropbox(filename, folder="Inbox")
         if not original_md:
-            return jsonify({"status": "error", "message": f"File '{filename}' not found in Dropbox Inbox"}), 404
+            return jsonify({"status": "error", "message": f"File '{filename}' not found in Inbox"}), 404
 
-        # Generate YAML front matter
+        # 🧱 Build YAML + content
         yaml_block = generate_yaml_front_matter(yaml_fields)
-
-        # Compose structured note
         structured_note = f"{yaml_block}\n\n{original_md.strip()}"
 
-        # Build destination path
+        # 📁 Compute path
         subfolder = parsed_date.strftime("%Y-%m")
         new_filename = f"{date_str}_{sanitize_filename(yaml_fields['title'])}.md"
         new_path = f"/Apps/SaveNotesGPT/NotesKB/{subfolder}/{new_filename}"
 
-        # Upload to Dropbox
+        # ⬆️ Upload to Dropbox
         result = dropbox_client.upload_structured_note(new_path, structured_note)
-
-        log(f"📄 /process_note: Processed and uploaded '{filename}' to '{new_path}'")
+        log(f"📦 Archived note: {filename} → {new_path}")
 
         return jsonify({
             "status": "success",
@@ -102,8 +122,9 @@ def handle_process_note():
         })
 
     except Exception as e:
-        log(f"❌ /process_note error: {str(e)}", level="error")
+        log(f"❌ Processing error: {str(e)}", level="error")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# 👇 For app.py import
-process_note = process_note_bp
+
+# 👇 Import into app.py as:
+process_note_routes = process_bp
