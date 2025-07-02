@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "SaveNotesGPT",
+  "name_for_human": "SaveNotesGPT",
+  "description_for_model": "Save, read, and process Markdown notes in Dropbox using semantic metadata.",
+  "description_for_human": "Organize your Markdown notes with AI-assisted metadata and Dropbox sync.",
+  "auth": {
+    "type": "bearer"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://save-note-api.onrender.com/gpt/jarbas_openapi.json"
+  },
+  "logo_url": "https://save-note-api.onrender.com/static/logo.png",
+  "contact_email": "support@savenotesgpt.ai",
+  "legal_info_url": "https://save-note-api.onrender.com/legal"
+}
