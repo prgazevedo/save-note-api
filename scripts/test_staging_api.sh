@@ -2,20 +2,18 @@
 STAGING_URL="https://save-note-api.onrender.com"
 NOTE_FILE="2025-06-01_Test-Note.md"
 
-echo "🌍 Testing staging @ $STAGING_URL"
-echo "🔐 Loading token from .tokens"
-
-# Load token from .tokens
-if [ -f ".tokens" ]; then
-  export $(grep GPT_TOKEN .tokens | xargs)
-else
-  echo "❌ .tokens file not found!"
-  exit 1
-fi
+echo "🔐 Loading GPT token..."
 
 if [ -z "$GPT_TOKEN" ]; then
-  echo "❌ GPT_TOKEN not set in .tokens"
-  exit 1
+  if [ -f ".tokens" ]; then
+    export $(grep GPT_TOKEN .tokens | xargs)
+    echo "✅ Loaded GPT_TOKEN from .tokens"
+  else
+    echo "❌ GPT_TOKEN not set and .tokens not found!"
+    exit 1
+  fi
+else
+  echo "✅ Using GPT_TOKEN from environment"
 fi
 
 # Test helper
