@@ -12,6 +12,7 @@
     }
   ],
   "components": {
+    "schemas": {},
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
