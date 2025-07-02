@@ -9,7 +9,7 @@
   },
   "api": {
     "type": "openapi",
-    "url": "https://save-note-api.onrender.com/gpt/jarbas_openapi.json"
+    "url": "https://prgazevedo.github.io/save-note-api/jarbas_openapi.json"
   },
   "logo_url": "https://save-note-api.onrender.com/static/logo.png",
   "contact_email": "support@savenotesgpt.ai",
