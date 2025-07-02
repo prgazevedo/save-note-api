@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://save-note-api.onrender.com/",
+      "url": "https://save-note-api.onrender.com",
       "description": "Render deployment"
     }
   ],
