@@ -5,6 +5,7 @@ from flasgger import Swagger
 from utils.logging_utils import log
 from utils.config_utils import load_config, load_logs, load_last_files
 from flask import Flask, send_from_directory
+import json
 from flask import Flask, jsonify, Response
 # Load local .env for dev
 load_dotenv()
