@@ -8,6 +8,7 @@ jobs:
   mock-test:
     name: 🔬 Run Flask Mock Test
     runs-on: ubuntu-latest
+
     steps:
       - name: ⬇️ Checkout
         uses: actions/checkout@v3
@@ -30,6 +31,8 @@ jobs:
           MOCK_MODE: 1
           GPT_BEARER_TOKEN: sk-GPT-MOCK
           FLASK_SECRET_KEY: test-secret
+          ADMIN_USERNAME: admin
+          ADMIN_PASSWORD: test1234
         run: |
           source venv/bin/activate
           nohup flask run > flask.log 2>&1 &
