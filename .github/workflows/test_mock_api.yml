@@ -6,6 +6,7 @@ on:
 
 jobs:
   mock-test:
+    name: 🔬 Run Flask Mock Test
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout
