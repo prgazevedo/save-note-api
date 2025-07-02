@@ -1,5 +1,5 @@
 {
-  "openapi": "3.0.1",
+  "openapi": "3.1.0",
   "info": {
     "title": "SaveNotesGPT API",
     "version": "1.0.0",
@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://save-note-api.onrender.com/",
+      "url": "https://save-note-api.onrender.com",
       "description": "Render deployment"
     }
   ],
