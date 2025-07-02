@@ -95,14 +95,21 @@ def startup_log():
         "✅ SaveNotesGPT is starting...",
         "📚 API Docs:    https://save-note-api.onrender.com/apidocs/",
         "🔐 Admin Panel: https://save-note-api.onrender.com/admin/dashboard",
+        "📄 README:      https://github.com/prgazevedo/save-note-api/blob/main/README.md",
+        "📂 OpenAPI JSON: https://save-note-api.onrender.com/static/.well-known/ai-plugin.json",
+        "📊 Logs (BetterStack): https://telemetry.betterstack.com/team/385553"
     ]
-    if not os.getenv("RENDER"):
+    if os.getenv("RENDER") == "true":
+        # Only log once in Render
+        for line in lines:
+            log(line, level="info")
+    else:
+        # Local dev: print and log
         for line in lines:
             print(line)
-    for line in lines:
-        log(line, level="info")
+            log(line, level="info")
 
 # Start Flask app
 if __name__ == "__main__":
     startup_log()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=False)
