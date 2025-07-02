@@ -14,6 +14,8 @@ DROPBOX_API_SAVE_FILE = "https://api.dropboxapi.com/2/files/save_url"
 BASE_DROPBOX_PATH = "/Apps/SaveNotesGPT"
 INBOX_PATH = f"{BASE_DROPBOX_PATH}/Inbox"
 NOTES_KB_PATH = f"{BASE_DROPBOX_PATH}/NotesKB"
+MOCK_MODE = os.getenv("MOCK_MODE") == "1"
+
 
 
 def upload_note_to_dropbox(title, date, content):
@@ -21,6 +23,10 @@ def upload_note_to_dropbox(title, date, content):
     Uploads a Markdown file to Dropbox under the NotesKB/{YYYY-MM}/ directory.
     Automatically builds the path from date and title.
     """
+    if MOCK_MODE:
+        print(f"📥 [MOCK] Uploading {title} for {date} — Skipped.")
+        return True
+
     access_token = get_access_token()
     filename = f"{date}_{title.replace(' ', '_')}.md"
     subfolder = date[:7]
@@ -52,6 +58,10 @@ def upload_structured_note(path: str, content: str) -> bool:
     Uploads a structured Markdown note (already containing YAML front matter) to Dropbox at the given full path.
     Example path: /Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-29_Title.md
     """
+    if MOCK_MODE:
+        print(f"📥 [MOCK] Structured upload to {path} — Skipped.")
+        return True
+
     access_token = get_access_token()
 
     headers = {
@@ -81,6 +91,9 @@ def download_note_from_dropbox(filename: str, folder: str = "Inbox") -> str:
     Defaults to the Inbox folder.
     Returns raw Markdown content as a string.
     """
+    if MOCK_MODE:
+        return f"# 📝 Mocked note: {filename}\n\nThis is mock content for testing."
+
     access_token = get_access_token()
     path = f"{INBOX_PATH}/{filename}" if folder == "Inbox" else f"{NOTES_KB_PATH}/{folder}/{filename}"
 
@@ -95,6 +108,7 @@ def download_note_from_dropbox(filename: str, folder: str = "Inbox") -> str:
         raise Exception(f"Failed to download file: {response.text}")
 
     return response.text
+
 
 
 def get_file_from_dropbox(filename, folder):
@@ -125,6 +139,13 @@ def list_folder(path):
     Raises Exception if the API call fails.
     Returns a list of metadata entries.
     """
+    if MOCK_MODE:
+        return [
+            {"name": "2025-07-01_test.md", ".tag": "file"},
+            {"name": "2025-07-02_meeting.md", ".tag": "file"},
+        ]
+
+
     access_token = get_access_token()
     headers = {
         "Authorization": f"Bearer {access_token}",

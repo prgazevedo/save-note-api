@@ -16,14 +16,14 @@ if [ -z "$GPT_TOKEN" ]; then
   exit 1
 fi
 
-# Helper: test an endpoint
+# Test helper
 function test_endpoint() {
-  local label="$1"
+  local name="$1"
   local path="$2"
   local method="$3"
   local data="$4"
 
-  echo -e "\n🔹 $label"
+  echo -e "\n🔹 $name"
   if [ "$method" == "POST" ]; then
     RESPONSE=$(curl -s -X POST "$STAGING_URL$path" -H "Authorization: Bearer $GPT_TOKEN" -H "Content-Type: application/json" -d "$data")
   else
@@ -33,9 +33,15 @@ function test_endpoint() {
   echo "$RESPONSE" | jq . 2>/dev/null || echo "$RESPONSE"
 }
 
-# Run tests
-test_endpoint "Scan Inbox" "/api/scan_inbox" POST '{}'
-test_endpoint "Process File" "/api/process_file" POST '{"filename": "2025-06-30_MinhaNota.md"}'
-test_endpoint "Scan and Process" "/api/scan_and_process" POST '{}'
+# Inbox Notes
+test_endpoint "📥 List Inbox files" "/api/inbox/files" GET
+test_endpoint "📥 List new Inbox notes" "/api/inbox/notes/new" GET
+test_endpoint "📥 Download Inbox note" "/api/inbox/notes/2025-06-30_MinhaNota.md" GET
+test_endpoint "📥 Process Inbox note" "/api/inbox/notes/2025-06-30_MinhaNota.md/process" POST '{}'
 
-echo -e "\n✅ Done testing staging!"
+# Knowledge Base Notes
+test_endpoint "📚 List KB notes" "/api/kb/notes" GET
+test_endpoint "📚 List KB subfolder" "/api/kb/notes/folder?folder=2025-06" GET
+test_endpoint "📚 Download KB note" "/api/kb/notes/2025-06-30_MinhaNota.md" GET
+
+echo -e "\n✅ Staging test complete!"

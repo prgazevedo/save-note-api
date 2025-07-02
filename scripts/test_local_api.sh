@@ -3,7 +3,10 @@ cd "$(dirname "$0")/.." || exit 1
 
 echo "🚀 Starting SaveNotesGPT local test..."
 
-# Load token from .tokens
+# Force mock mode for local test
+export MOCK_MODE=1
+
+# Load token from .tokens file
 if [ -f ".tokens" ]; then
   export $(grep GPT_TOKEN .tokens | xargs)
 else
@@ -16,7 +19,7 @@ if [ -z "$GPT_TOKEN" ]; then
   exit 1
 fi
 
-# 1. Activate venv
+# Activate virtual environment
 if [ -d "venv" ]; then
   source venv/bin/activate
 else
@@ -24,12 +27,12 @@ else
   exit 1
 fi
 
-# 2. Start Flask app in background
+# Start Flask in background
 echo "⚙️ Starting Flask..."
 FLASK_APP=app.py flask run > flask.log 2>&1 &
 FLASK_PID=$!
 
-# 3. Wait until server is up, or fail if Flask exits
+# Wait for Flask
 TIMEOUT=10
 for i in $(seq 1 $TIMEOUT); do
   if curl -s http://localhost:5000/ > /dev/null; then
@@ -38,7 +41,7 @@ for i in $(seq 1 $TIMEOUT); do
   fi
 
   if ! kill -0 $FLASK_PID 2>/dev/null; then
-    echo "❌ Flask failed to start. Check flask.log below:"
+    echo "❌ Flask failed to start. See flask.log:"
     tail -n 40 flask.log
     exit 1
   fi
@@ -48,7 +51,6 @@ done
 
 echo "📡 Testing endpoints..."
 
-# 4. Call endpoints with token
 function test_endpoint() {
   local name="$1"
   local method="$2"
@@ -65,13 +67,20 @@ function test_endpoint() {
   echo "$RESPONSE" | jq . 2>/dev/null || echo "$RESPONSE"
 }
 
-test_endpoint "Scan Inbox" POST http://localhost:5000/api/scan_inbox '{}'
-test_endpoint "Process File" POST http://localhost:5000/api/process_file '{"filename": "2025-06-30_MinhaNota.md"}'
-test_endpoint "Scan and Process" POST http://localhost:5000/api/scan_and_process '{}'
+# Inbox Notes
+test_endpoint "📥 List Inbox files" GET http://localhost:5000/api/inbox/files
+test_endpoint "📥 List new Inbox notes" GET http://localhost:5000/api/inbox/notes/new
+test_endpoint "📥 Download Inbox note" GET http://localhost:5000/api/inbox/notes/2025-06-30_MinhaNota.md
+test_endpoint "📥 Process Inbox note" POST http://localhost:5000/api/inbox/notes/2025-06-30_MinhaNota.md/process '{}'
 
-# 5. Cleanup
+# Knowledge Base Notes
+test_endpoint "📚 List KB notes" GET http://localhost:5000/api/kb/notes
+test_endpoint "📚 List KB subfolder" GET http://localhost:5000/api/kb/notes/folder?folder=2025-06
+test_endpoint "📚 Download KB note" GET http://localhost:5000/api/kb/notes/2025-06-30_MinhaNota.md
+
+# Stop Flask
 echo -e "\n🛑 Stopping Flask (PID $FLASK_PID)"
 kill $FLASK_PID
 sleep 1
 
-echo "✅ Done!"
+echo "✅ Local test complete!"

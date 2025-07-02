@@ -5,10 +5,12 @@ import requests
 from datetime import datetime
 import yaml
 
+MOCK_MODE = os.getenv("MOCK_MODE") == "1"
+
 def get_access_token():
-    """
-    Uses Dropbox refresh token flow to get a new short-lived access token.
-    """
+    if MOCK_MODE:
+        return "mock-access-token"
+    
     refresh_token = os.getenv("DROPBOX_REFRESH_TOKEN")
     client_id = os.getenv("DROPBOX_APP_KEY")
     client_secret = os.getenv("DROPBOX_APP_SECRET")

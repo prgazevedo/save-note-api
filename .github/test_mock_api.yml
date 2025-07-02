@@ -1,0 +1,39 @@
+name: Mock API Test
+
+on:
+  push:
+    branches: [main, refactor_api]
+
+jobs:
+  mock-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v3
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: ⚙️ Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: 🧪 Run Flask in mock mode
+        env:
+          FLASK_APP: app.py
+          FLASK_ENV: development
+          MOCK_MODE: 1
+          GPT_BEARER_TOKEN: sk-GPT-MOCK
+          FLASK_SECRET_KEY: test-secret
+        run: |
+          source venv/bin/activate
+          nohup flask run > flask.log 2>&1 &
+          FLASK_PID=$!
+          echo "Waiting for Flask..."
+          sleep 5
+          curl --fail http://localhost:5000/ || (cat flask.log && exit 1)
+          kill $FLASK_PID
