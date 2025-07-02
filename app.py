@@ -89,6 +89,9 @@ def health_check():
 @app.route('/.well-known/ai-plugin.json')
 def serve_ai_plugin():
     return send_from_directory("static/.well-known", "ai-plugin.json", mimetype='application/json')
+@app.route("/gpt/jarbas_openapi.json")
+def serve_openapi():
+    return send_from_directory("static/gpt", "jarbas_openapi.json", mimetype="application/json")
 
 def startup_log():
     lines = [
