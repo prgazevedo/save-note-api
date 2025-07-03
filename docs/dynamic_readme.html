@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveNotesGPT API - README</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #24292e;
+        }
+        .back-link {
+            background: #f1f3f4;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #586069;
+        }
+        .error {
+            background: #ffeaa7;
+            padding: 16px;
+            border-radius: 6px;
+            border-left: 4px solid #fdcb6e;
+        }
+        /* GitHub markdown styles */
+        h1, h2, h3 { margin-top: 24px; margin-bottom: 16px; }
+        h1 { font-size: 2em; border-bottom: 1px solid #eaecef; padding-bottom: 10px; }
+        h2 { font-size: 1.5em; border-bottom: 1px solid #eaecef; padding-bottom: 10px; }
+        code { 
+            background-color: rgba(27,31,35,0.05); 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+        }
+        pre {
+            background-color: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow: auto;
+        }
+        a { color: #0366d6; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        ul, ol { padding-left: 20px; }
+        blockquote {
+            margin: 0;
+            padding: 0 16px;
+            color: #6a737d;
+            border-left: 4px solid #dfe2e5;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+</head>
+<body>
+    <div class="back-link">
+        <a href="./">← Back to Documentation Hub</a> | 
+        <a href="https://github.com/prgazevedo/save-note-api/blob/main/README.md">View on GitHub</a>
+    </div>
+
+    <div id="content">
+        <div class="loading">Loading README...</div>
+    </div>
+
+    <script>
+        async function loadReadme() {
+            try {
+                // Fetch README from GitHub's raw content
+                const response = await fetch('https://raw.githubusercontent.com/prgazevedo/save-note-api/main/README.md');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const markdown = await response.text();
+                
+                // Convert markdown to HTML
+                const html = marked.parse(markdown);
+                
+                // Display the content
+                document.getElementById('content').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading README:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        <h3>Could not load README</h3>
+                        <p>Please visit the <a href="https://github.com/prgazevedo/save-note-api">GitHub repository</a> to view the latest documentation.</p>
+                        <p><small>Error: ${error.message}</small></p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load README when page loads
+        loadReadme();
+    </script>
+</body>
+</html>

@@ -4,6 +4,21 @@
 [![Staging Tests](https://github.com/prgazevedo/save-note-api/actions/workflows/test_staging_api.yml/badge.svg)](https://github.com/prgazevedo/save-note-api/actions/workflows/test_staging_api.yml)
 
 ---
+
+Welcome to the SaveNotesGPT API documentation and resources.
+🚀 Live Service
+
+Production API: https://save-note-api.onrender.com
+API Documentation: https://save-note-api.onrender.com/apidocs/
+Admin Dashboard: https://save-note-api.onrender.com/admin/dashboard
+
+📋 API Resources
+OpenAPI Specifications
+
+GPT Plugin Manifest: ai-plugin.json
+OpenAPI Schema: jarbas_openapi.json
+
+---
 **SaveNotesGPT** transforms your raw notes into a structured, searchable personal knowledge base using AI-generated metadata. 
 
 Drop in handwritten notes, thoughts, or Obsidian files — GPT enhances them with tags, summaries, and organization.
