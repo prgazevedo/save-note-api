@@ -13,12 +13,11 @@ Welcome to the SaveNotesGPT API documentation and resources.
 - API Documentation: https://save-note-api.onrender.com/apidocs/
 - Admin Dashboard: https://save-note-api.onrender.com/admin/dashboard
 
-📋 API Resources 
+📋 API Resources - OpenAPI Specifications:
 
-- OpenAPI Specifications at github:
--- GPT Plugin Manifest: [ai-plugin.json](https://prgazevedo.github.io/save-note-api/.well-known/ai-plugin.json)
--- OpenAPI Schema: [jarbas_openapi.json](https://save-note-api.onrender.com/gpt/jarbas_openapi.json)
--- OpenAPI Specifications at render: [https://save-note-api.onrender.com/](https://save-note-api.onrender.com/static/.well-known/ai-plugin.json)
+- GPT Plugin Manifest: [ai-plugin.json](https://prgazevedo.github.io/save-note-api/.well-known/ai-plugin.json)
+- OpenAPI Schema: [jarbas_openapi.json](https://save-note-api.onrender.com/gpt/jarbas_openapi.json)
+-  OpenAPI Specifications at render: [https://save-note-api.onrender.com/](https://save-note-api.onrender.com/static/.well-known/ai-plugin.json)
 
 
 **SaveNotesGPT** transforms your raw notes into a structured, searchable personal knowledge base using AI-generated metadata. 
