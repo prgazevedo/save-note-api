@@ -1,22 +1,170 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.1",
   "info": {
     "title": "SaveNotesGPT API",
-    "version": "1.0.0",
-    "description": "Endpoints for JarbasGPT to list, read, and archive Markdown notes in Dropbox via Push flow. All routes are namespaced under /api/."
+    "version": "2.0.0",
+    "description": "RESTful API for managing personal knowledge through AI-enhanced note processing. Transform raw notes into structured, searchable knowledge base entries with GPT-generated metadata and Obsidian link support."
   },
   "servers": [
     {
       "url": "https://save-note-api.onrender.com",
-      "description": "Render deployment"
+      "description": "Production deployment"
     }
   ],
   "components": {
-    "schemas": {},
+    "schemas": {
+      "Note": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "example": "2025-07-03_meeting-notes.md"
+          },
+          "title": {
+            "type": "string",
+            "example": "Meeting Notes"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["unprocessed", "processed"],
+            "example": "unprocessed"
+          },
+          "path": {
+            "type": "string",
+            "example": "/api/inbox/notes/2025-07-03_meeting-notes.md"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-07-03T10:30:00Z"
+          },
+          "size": {
+            "type": "integer",
+            "example": 1024
+          }
+        }
+      },
+      "NoteContent": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "note": {
+            "type": "object",
+            "properties": {
+              "filename": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "content_type": {
+                "type": "string",
+                "example": "text/markdown"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["inbox", "knowledge_base"]
+              },
+              "has_metadata": {
+                "type": "boolean"
+              },
+              "processing_status": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ProcessNoteRequest": {
+        "type": "object",
+        "required": ["action", "metadata"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["process"],
+            "example": "process"
+          },
+          "metadata": {
+            "type": "object",
+            "required": ["title", "date"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Weekly Team Meeting"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-07-03"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["meeting", "team", "weekly"]
+              },
+              "author": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "source": {
+                "type": "string",
+                "example": "handwritten"
+              },
+              "type": {
+                "type": "string",
+                "example": "meeting-notes"
+              },
+              "summary": {
+                "type": "string",
+                "example": "Weekly team sync covering project updates and Q4 planning"
+              },
+              "language": {
+                "type": "string",
+                "example": "en"
+              }
+            }
+          },
+          "copy_linked_files": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to copy linked files from Inbox to KB (Obsidian support)"
+          }
+        }
+      },
+      "CreateNoteRequest": {
+        "type": "object",
+        "required": ["title", "content"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Meeting Ideas"
+          },
+          "content": {
+            "type": "string",
+            "example": "# Meeting Ideas\n\n- Discuss Q4 roadmap\n- Review team capacity"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-07-03"
+          },
+          "source": {
+            "type": "string",
+            "example": "handwritten"
+          }
+        }
+      }
+    },
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "description": "Bearer token for API authentication"
       }
     }
   },
@@ -26,23 +174,117 @@
     }
   ],
   "paths": {
-    "/api/inbox/files": {
+    "/api/inbox/notes": {
       "get": {
-        "operationId": "scan_inbox",
-        "summary": "Scan Dropbox Inbox",
-        "description": "Lists Markdown files in the Inbox folder",
+        "operationId": "listInboxNotes",
+        "summary": "List inbox notes",
+        "description": "List raw notes in the inbox awaiting GPT processing. These are unprocessed notes that need metadata enhancement.",
+        "tags": ["Inbox Notes"],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "unprocessed"],
+              "default": "all"
+            },
+            "description": "Filter notes by processing status"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Maximum number of notes to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            },
+            "description": "Number of notes to skip for pagination"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "List of files",
+            "description": "List of raw notes awaiting processing",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "status": { "type": "string" },
-                    "new_files": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "notes": {
                       "type": "array",
-                      "items": { "type": "string" }
+                      "items": {
+                        "$ref": "#/components/schemas/Note"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "offset": {
+                          "type": "integer"
+                        },
+                        "has_more": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createInboxNote",
+        "summary": "Create raw note in inbox",
+        "description": "Create a new raw note in the inbox for later GPT processing. Useful for capturing thoughts, ideas, or uploading handwritten notes.",
+        "tags": ["Inbox Notes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNoteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Note created successfully in inbox",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "note": {
+                      "$ref": "#/components/schemas/Note"
+                    },
+                    "message": {
+                      "type": "string"
                     }
                   }
                 }
@@ -54,46 +296,51 @@
     },
     "/api/inbox/notes/{filename}": {
       "get": {
-        "operationId": "get_inbox_note",
-        "summary": "Read Inbox Note Content",
-        "description": "Fetches raw Markdown content of a note from the Inbox folder.",
+        "operationId": "getInboxNote",
+        "summary": "Get raw inbox note content",
+        "description": "Retrieve the content of a specific raw note from the inbox. Use this to read note content before processing.",
+        "tags": ["Inbox Notes"],
         "parameters": [
           {
             "name": "filename",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filename of the note in the inbox"
           }
         ],
         "responses": {
           "200": {
-            "description": "Note content",
+            "description": "Raw note content",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": { "type": "string" },
-                    "content": { "type": "string" }
-                  }
+                  "$ref": "#/components/schemas/NoteContent"
                 }
               }
             }
+          },
+          "404": {
+            "description": "Note not found in inbox"
           }
         }
-      }
-    },
-    "/api/inbox/notes/{filename}/process": {
-      "post": {
-        "operationId": "process_note",
-        "summary": "Inject YAML and Archive",
-        "description": "Adds GPT-generated metadata to an existing note in the Inbox and archives it in structured KB folder.",
+      },
+      "patch": {
+        "operationId": "processInboxNote",
+        "summary": "Process note with GPT metadata",
+        "description": "Transform a raw note by adding GPT-generated YAML metadata and moving it to the Knowledge Base. Supports Obsidian link processing.",
+        "tags": ["Inbox Notes"],
         "parameters": [
           {
             "name": "filename",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filename of the note to process"
           }
         ],
         "requestBody": {
@@ -101,42 +348,138 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": ["yaml"],
-                "properties": {
-                  "yaml": {
-                    "type": "object",
-                    "properties": {
-                      "title": { "type": "string" },
-                      "date": { "type": "string", "format": "date" },
-                      "tags": { "type": "array", "items": { "type": "string" } },
-                      "author": { "type": "string" },
-                      "source": { "type": "string" },
-                      "type": { "type": "string" },
-                      "uid": { "type": "string" },
-                      "status": { "type": "string" },
-                      "linked_files": { "type": "array", "items": { "type": "string" } },
-                      "language": { "type": "string" },
-                      "summary": { "type": "string" }
-                    }
-                  }
-                }
+                "$ref": "#/components/schemas/ProcessNoteRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Note archived"
+            "description": "Note processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "source_note": {
+                          "type": "string"
+                        },
+                        "kb_path": {
+                          "type": "string"
+                        },
+                        "linked_files_detected": {
+                          "type": "integer"
+                        },
+                        "linked_files_copied": {
+                          "type": "integer"
+                        },
+                        "upload_success": {
+                          "type": "boolean"
+                        },
+                        "copied_files": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/inbox/notes": {
+    "/api/kb/notes": {
+      "get": {
+        "operationId": "listKbNotes",
+        "summary": "List Knowledge Base notes",
+        "description": "List processed notes in the Knowledge Base. These notes have GPT-generated metadata and are organized in date-based folders.",
+        "tags": ["Knowledge Base"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "folder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by KB subfolder (YYYY-MM format)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of processed notes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/Note"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "folder": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "pagination": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
-        "operationId": "save_note_to_dropbox",
-        "summary": "Save complete Markdown",
-        "description": "Saves a full Markdown file (with YAML frontmatter) directly to Dropbox.",
+        "operationId": "createKbNote",
+        "summary": "Create processed note directly in KB",
+        "description": "Create a note directly in the Knowledge Base with complete YAML frontmatter, bypassing the inbox processing flow.",
+        "tags": ["Knowledge Base"],
         "requestBody": {
           "required": true,
           "content": {
@@ -145,20 +488,117 @@
                 "type": "object",
                 "required": ["title", "date", "content"],
                 "properties": {
-                  "title": { "type": "string" },
-                  "date": { "type": "string", "format": "date" },
-                  "content": { "type": "string" }
+                  "title": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Complete Markdown content with YAML frontmatter"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
+          "201": {
+            "description": "Note created in Knowledge Base"
+          }
+        }
+      }
+    },
+    "/api/kb/notes/{filename}": {
+      "get": {
+        "operationId": "getKbNote",
+        "summary": "Get Knowledge Base note content",
+        "description": "Retrieve the content of a processed note from the Knowledge Base. These notes include YAML frontmatter with metadata.",
+        "tags": ["Knowledge Base"],
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
           "200": {
-            "description": "Note saved"
+            "description": "Processed note with metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteContent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found in Knowledge Base"
+          }
+        }
+      }
+    },
+    "/api/kb/folders": {
+      "get": {
+        "operationId": "listKbFolders",
+        "summary": "List Knowledge Base folders",
+        "description": "List all folders in the Knowledge Base with note counts and metadata. Folders are typically organized by date (YYYY-MM).",
+        "tags": ["Knowledge Base"],
+        "responses": {
+          "200": {
+            "description": "List of KB folders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    },
+                    "folders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "note_count": {
+                            "type": "integer"
+                          },
+                          "path": {
+                            "type": "string"
+                          },
+                          "latest_note": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Inbox Notes",
+      "description": "Raw notes awaiting GPT processing and metadata enhancement"
+    },
+    {
+      "name": "Knowledge Base",
+      "description": "Processed notes with GPT-generated metadata, organized for knowledge management"
+    }
+  ]
 }

@@ -14,7 +14,7 @@ load_dotenv()
 from routes.process import process_note_routes
 from routes.auth import bp as auth_bp
 from routes.admin import bp as admin_bp
-from routes.scan import inbox_files_routes
+from routes.scan import inbox_notes_routes
 from routes.upload import upload_note_api
 from routes.download import download_routes
 from routes.list import kb_notes_list_routes
@@ -57,7 +57,7 @@ Swagger(app, config=swagger_config, template=swagger_template)
 app.register_blueprint(process_note_routes)
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
-app.register_blueprint(inbox_files_routes)
+app.register_blueprint(inbox_notes_routes) 
 app.register_blueprint(download_routes)
 app.register_blueprint(upload_note_api)
 app.register_blueprint(kb_notes_list_routes)

@@ -1,12 +1,22 @@
-# 🧠 SaveNotesGPT — A Semantic Personal Knowledge System
+# 🧠 SaveNotesGPT — AI-Powered Personal Knowledge Management
 
-**SaveNotesGPT** is a lightweight, extensible platform for converting handwritten notes, daily entries, and research logs into structured, metadata-rich Markdown files. These notes are safely archived in Dropbox and semantically indexed using GPT — forming a durable, searchable personal knowledge base.
-
-This project is part of a broader **Personal Knowledge Infrastructure**, built to support long-term memory, reflection, and insight retrieval across platforms like Obsidian and ChatGPT.
+[![Mock Tests](https://github.com/prgazevedo/save-note-api/actions/workflows/test_mock_api.yml/badge.svg)](https://github.com/prgazevedo/save-note-api/actions/workflows/test_mock_api.yml)
+[![Staging Tests](https://github.com/prgazevedo/save-note-api/actions/workflows/test_staging_api.yml/badge.svg)](https://github.com/prgazevedo/save-note-api/actions/workflows/test_staging_api.yml)
 
 ---
-## Project Status
-[![CI Status](https://github.com/prgazevedo/save-note-api/actions/workflows/test_mock_api.yml/badge.svg)](https://github.com/prgazevedo/save-note-api/actions/workflows/test_mock_api.yml)
+**SaveNotesGPT** transforms your raw notes into a structured, searchable personal knowledge base using AI-generated metadata. Drop in handwritten notes, thoughts, or Obsidian files — GPT enhances them with tags, summaries, and organization.
+---
+## 🔄 How It Works
+
+```
+Raw Note (Inbox) → GPT Processing → Structured Knowledge Base
+```
+
+1. **Capture**: Add notes to your Dropbox Inbox (handwritten, typed, Obsidian exports)
+2. **Enhance**: GPT adds metadata (tags, summaries, titles, dates) 
+3. **Organize**: Notes move to date-organized Knowledge Base with preserved links
+4. **Search**: Use Obsidian, GPT, or API to find connections and insights
+
 
 ---
 
@@ -28,228 +38,214 @@ Enable a fluid pipeline where:
 
 In this mode, an external GPT (e.g., `JarbasGPT`) performs metadata generation and pushes notes to the system.
 →GPT reads the raw note from Dropbox Inbox, prepends YAML, archives to `/NotesKB/YYYY-MM/`. 
-1. GPT calls `/api/scan_inbox` to list new files in the Inbox
-2. For each file, GPT uses `/get_inbox_note` to fetch raw Markdown content
-3. GPT generates YAML metadata (title, date, tags, etc.)
-4. Then calls:
-   - `POST /process_note` → if file exists in Inbox and needs metadata injection
-   - `POST /save_note` → if GPT generated the full Markdown already
 
----
+1. GPT calls `GET /api/inbox/notes` to list new files in the Inbox
+2. For each file, GPT uses `GET /api/inbox/notes/{filename}` to fetch raw Markdown content
+3. GPT generates YAML metadata (title, date, tags, etc.)
+4. Then calls `PATCH /api/inbox/notes/{filename}` to process and archive
+
 ### 📥 Pull Mode (App generates metadata using GPT)
 
 In this mode, the system automatically generates metadata using GPT calls.
 
-1. App calls `/api/scan_inbox` to detect new raw notes
+1. App calls `GET /api/inbox/notes` to detect new raw notes
 2. For each, the backend:
    - Downloads file via Dropbox API
    - Sends content to OpenAI/GPT
    - Extracts title, date, tags, summary, etc.
-3. App then injects the YAML and archives it using `/process_note`
+3. App then injects the YAML and archives it using the process endpoint
 
 ✅ This allows the app to function without GPT actively pushing notes — enabling full automation, batch processing, or scheduled runs.
 
 ---
-## 🧠 GPT Integration (JarbasGPT via OpenAPI)
 
-To connect **JarbasGPT** with your API backend and enable semantic note processing, you can import the OpenAPI schema directly from GitHub using the **"Import from URL"** option in the [ChatGPT Actions interface](https://platform.openai.com/docs/assistants/tools/actions).
+## 🎯 Use Cases
 
-### ✅ Steps to Connect SaveNotesGPT API to GPT (Jarbas)
-
-1. The OpenAPI schema of the GPT is inthe GitHub repo:
-
-   ```
-   save-note-api/gpt/jarbas_openapi.json
-   ```
-
-2. In ChatGPT, go to:
-   ```
-   Assistants → Add Tool → Actions → Import from URL
-   ```
-
-3. Paste the raw GitHub URL to your schema file:
-
-   ```
-   https://raw.githubusercontent.com/prgazevedo/save-note-api/main/gpt/jarbas_openapi.json
-   ```
-
-4. Click **Import**. The assistant will recognize the API and expose the actions for calling:
+- **📝 Quick Capture**: Voice-to-text → API → GPT processing
+- **📚 Research Notes**: Web clips → Inbox → AI categorization  
+- **✍️ Handwritten Notes**: OCR → Upload → Metadata enhancement
+- **🔗 Obsidian Sync**: Export vault → Process → Enhanced re-import
+- **🤖 ChatGPT Memory**: Give ChatGPT access to your personal knowledge base
 
 ---
 
-### 📡 Supported API Actions
 
-- | Operation         | Path                        | Description                                  |
-- |------------------|-----------------------------|----------------------------------------------|
-- | `scan_inbox`     | `POST /api/scan_inbox`      | List Markdown files in Inbox                 |
-- | `get_inbox_note` | `GET /api/get_inbox_note`   | Fetch raw Markdown content from Inbox        |
-- | `process_note`   | `POST /api/process_note`    | Inject metadata and archive a note           |
-- | `save_note`      | `POST /api/save_note`       | Upload full Markdown note with frontmatter   |
+## 🚀 Quick Start
 
-+ | Operation              | Method & Path                                     | Description                                    |
-+ |------------------------|---------------------------------------------------|------------------------------------------------|
-+ | `list_inbox_files`     | `GET /api/inbox/files`                            | List new `.md` files since last scan           |
-+ | `get_inbox_note`       | `GET /api/inbox/notes/{filename}`                | Fetch raw Markdown content from Inbox          |
-+ | `process_inbox_note`   | `POST /api/inbox/notes/{filename}/process`       | Inject metadata and archive the file           |
-+ | `list_kb_notes`        | `GET /api/kb/notes`                               | List all KB notes                              |
-+ | `list_kb_subfolder`    | `GET /api/kb/notes/folder?folder=YYYY-MM`        | List `.md` files in a specific KB subfolder    |
-+ | `get_kb_note`          | `GET /api/kb/notes/{filename}`                  | Retrieve note content from KB by filename      |
-+ | `save_note`            | `POST /api/kb/notes`                              | Upload full Markdown note with YAML metadata   |
-
-
----
-
-Once connected, JarbasGPT can list notes, read raw Markdown, inject GPT metadata, and archive files — all through your authenticated Render deployment.
-___
-
-## 📥 Note Upload (Direct)
-
-`POST /save_note`
-
-```json
-{
-  "title": "Work Log – Backend Refactor",
-  "date": "2025-06-01",
-  "content": "---\ntitle: Work Log – Backend Refactor\ndate: 2025-06-01\ntags: [work, backend, refactor]\nauthor: me\nsource: gpt\ntype: text\nuid: work-refactor-20250601\nstatus: processed\nlinked_files: []\nlanguage: en\nsummary: >\n  Refactoring backend modular structure for note processing API.\n---\n\n# Backend Refactor Log\n\nToday I finalized the modular restructure of the Flask API..."
-}
+### 1. **Add a Raw Note**
+```bash
+curl -X POST https://save-note-api.onrender.com/api/inbox/notes \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Meeting Ideas", 
+    "content": "# Ideas\n\n- Discuss Q4 roadmap\n- Review capacity"
+  }'
 ```
 
-Stored at:  
-`/Apps/SaveNotesGPT/NotesKB/2025-06/2025-06-01_Work_Log_Backend_Refactor.md`
-
-
-
----
-
-## 🧰 Stack
-
-| Layer    | Tool / Service           |
-|----------|---------------------------|
-| Backend  | Flask (Python)            |
-| Deployment | Render.com              |
-| Storage  | Dropbox (OAuth2 Refresh)  |
-| Client   | ChatGPT (Custom GPT)      |
-| Integration | Craft, Obsidian        |
-| Language | Markdown .md              |
-| Logging  | Logtail + JSON logs       |
-
----
-
-## 🔐 Login and admin Authentication
-
-- `/login` and `/admin/dashboard` protected by session login
-- Environment variables:
-  - `ADMIN_USERNAME`
-  - `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`
-  - `FLASK_SECRET_KEY`
-
-## 🔐 Token Authentication for GPT API Access
-
-All `/api/*` endpoints require a valid `Authorization: Bearer ...` token in the request header.
-
-The token is stored **securely in `.tokens`** file during local dev and as environment variable in production.
-
-### 🔐 In `.tokens` file
-
-```env
-GPT_TOKEN=sk-GPT-YourSecureTokenHere
-
----
-
-## 📜 Logging
-
-Structured logging is handled via `logging_utils.py`:
-
-| Output         | When                    |
-|----------------|--------------------------|
-| Stdout         | Always                   |
-| Logtail        | If `LOGTAIL_TOKEN` is defined |
-| admin_log.json | When running locally     |
-
-All logs are JSON-structured to support Logtail ingestion and Render streaming.
-
-
----
-
-## 📁 Dropbox Layout
-
+### 2. **Discover Notes** 
+```bash
+curl https://save-note-api.onrender.com/api/inbox/notes \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
-Dropbox/
-└── Apps/
-    └── SaveNotesGPT/
-        └── NotesKB/
-            ├── 2025-05/
-            │   └── 2025-05-17_Work_Log_API_Tests.md
-            └── 2025-06/
-                ├── 2025-06-01_work_log.md
-                └── 2025-06-01_test_upload.md
+
+### 3. **Process with GPT**
+```bash
+curl -X PATCH https://save-note-api.onrender.com/api/inbox/notes/2025-07-03_meeting-ideas.md \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "process",
+    "metadata": {
+      "title": "Q4 Planning Meeting Ideas",
+      "date": "2025-07-03", 
+      "tags": ["meeting", "planning", "q4"],
+      "summary": "Initial ideas for Q4 planning discussion"
+    }
+  }'
+```
+
+### 4. **Browse Knowledge Base**
+```bash
+curl https://save-note-api.onrender.com/api/kb/notes \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 ---
 
-## 🔧 Local Development Setup
+## 📡 API Endpoints
 
-1. Clone the repository
+### **📥 Inbox (Raw Notes)**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/inbox/notes` | List raw notes awaiting processing |
+| `GET` | `/api/inbox/notes/{filename}` | Read note content |
+| `POST` | `/api/inbox/notes` | Create new raw note |
+| `PATCH` | `/api/inbox/notes/{filename}` | Process with GPT metadata |
+
+### **📚 Knowledge Base (Processed Notes)**  
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/kb/notes` | List processed notes |
+| `GET` | `/api/kb/notes/{filename}` | Read processed note |
+| `GET` | `/api/kb/folders` | List date-organized folders |
+| `POST` | `/api/kb/notes` | Create processed note directly |
+
+---
+
+## 🔗 Obsidian Integration
+
+SaveNotesGPT fully supports **Obsidian linking**:
+
+- **`[[Wiki Links]]`** - Links preserved across vault
+- **`![[Embedded Files]]`** - Images/attachments copied automatically  
+- **`[Markdown](./links)`** - Relative paths maintained
+- **Folder structure** - Preserved when copying linked files
+
+**Example**: Upload an Obsidian note with `![[diagram.png]]` → GPT processes it → Both note and diagram.png end up in your Knowledge Base with working links.
+
+---
+
+## 🧠 GPT Integration 
+
+### **Connect to ChatGPT:**
+
+1. Go to **ChatGPT → Create GPT**
+2. **Import API**: Use `https://save-note-api.onrender.com/.well-known/ai-plugin.json`
+3. **Set Authentication**: Bearer token (get from your deployment)
+4. **Test**: "Scan my inbox for new notes to process"
+
+### **GPT Instructions:**
+```
+You are SaveNotesGPT, an AI assistant that processes raw notes into structured knowledge.
+
+Your workflow:
+1. Scan inbox for unprocessed notes
+2. Read note content and understand context  
+3. Generate meaningful metadata (title, tags, summary)
+4. Process notes to move them to organized Knowledge Base
+
+Always generate 3-7 descriptive tags, concise summaries, and clear titles.
+```
+
+---
+
+## 🏗️ Architecture
+
+| Layer | Technology |
+|-------|------------|
+| **API** | Flask (Python) |
+| **Storage** | Dropbox (OAuth2) |
+| **Deployment** | Render.com |
+| **Client** | ChatGPT Actions |
+| **Integration** | Obsidian, Craft |
+| **Format** | Markdown + YAML |
+
+---
+
+## 📁 Knowledge Base Structure
+
+```
+Dropbox/Apps/SaveNotesGPT/
+├── Inbox/                           # Raw notes
+│   ├── 2025-07-03_ideas.md         # Unprocessed
+│   └── attachments/
+│       └── diagram.png             # Linked files
+└── NotesKB/                        # Processed notes  
+    └── 2025-07/                    # Date-organized
+        ├── 2025-07-03_meeting-notes.md  # With YAML metadata
+        └── diagram.png             # Copied with links intact
+```
+
+---
+
+## 🔧 Local Development
 
 ```bash
+# Clone and setup
 git clone https://github.com/prgazevedo/save-note-api.git
 cd save-note-api
-```
-
-2. Run setup script
-
-```bash
 bash scripts/setup_dev.sh
-```
 
-Then fill in your Dropbox API credentials and admin variables in the generated `.env` file.
+# Configure environment
+# Edit .env with your Dropbox credentials
 
-3. Run the Flask API
-
-```bash
+# Run locally  
 source venv/bin/activate
 python app.py
 ```
 
----
-
-## ⚙️ Project Scripts
-
-| Script                          | Purpose                             |
-|----------------------------------|-------------------------------------|
-| scripts/init_modular_flask_kb.sh| Scaffolds a new modular Flask API   |
-| scripts/setup_dev.sh            | Prepares dev environment and configs|
+**API Documentation**: `http://localhost:5000/apidocs/`
 
 ---
 
-## 🔭 Swagger API
+## 🔐 Authentication
 
-- Available at: `/apidocs`
-- Uses Flasgger
-- Custom description links to README
-- Docs auto-load all Flask routes
+### **API Access**
+All `/api/*` endpoints require Bearer token authentication:
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  https://save-note-api.onrender.com/api/inbox/notes
+```
 
----
-
-## 🔐 Admin Dashboard
-
-- Available at: `/admin/dashboard`
-- Requires login with env credentials
-- Allows:
-  - Editing inbox / KB folders
-  - Triggering inbox scan
-  - Viewing logs and recent files
-
+### **Admin Dashboard**
+- **URL**: `/admin/dashboard`  
+- **Credentials**: Set via `ADMIN_USERNAME` and `ADMIN_PASSWORD` environment variables
+- **Features**: View logs, manage configurations, trigger scans
 
 ---
 
-## 📜 License
+## 📜 Version History
 
-MIT License — for personal use, reflection, and synthesis workflows.
+- **v2.0.0** - RESTful API redesign, Obsidian support, GPT Actions integration
+- **v1.0.0** - Initial release with basic note processing
 
 ---
 
-## 🔖 Version Tag
+## 📄 License
 
-**v3.0.0-openapi-gpt**  
-Structure today. Retrieve tomorrow.
+MIT License — Build your knowledge, own your data.
+
+---
+
+**Structure today. Retrieve tomorrow.** 🧠✨

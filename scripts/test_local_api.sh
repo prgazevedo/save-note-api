@@ -58,6 +58,8 @@ function test_endpoint() {
   echo -e "\n🔹 $name"
   if [ "$method" == "POST" ]; then
     RESPONSE=$(curl -s -X POST "$url" -H "Authorization: Bearer $GPT_TOKEN" -H "Content-Type: application/json" -d "$data")
+  elif [ "$method" == "PATCH" ]; then
+    RESPONSE=$(curl -s -X PATCH "$url" -H "Authorization: Bearer $GPT_TOKEN" -H "Content-Type: application/json" -d "$data")
   else
     RESPONSE=$(curl -s "$url" -H "Authorization: Bearer $GPT_TOKEN")
   fi
@@ -66,15 +68,27 @@ function test_endpoint() {
 }
 
 # Inbox Notes
-test_endpoint "📥 List Inbox files" GET http://localhost:5000/api/inbox/files
-test_endpoint "📥 List new Inbox notes" GET http://localhost:5000/api/inbox/notes/new
-test_endpoint "📥 Download Inbox note" GET http://localhost:5000/api/inbox/notes/2025-06-30_MinhaNota.md
-test_endpoint "📥 Process Inbox note" POST http://localhost:5000/api/inbox/notes/2025-06-30_MinhaNota.md/process '{}'
+test_endpoint "📥 List Inbox notes" GET http://localhost:5000/api/inbox/notes
+test_endpoint "📥 Get Inbox note" GET http://localhost:5000/api/inbox/notes/2025-06-30_MinhaNota.md
+test_endpoint "📥 Create Inbox note" POST http://localhost:5000/api/inbox/notes '{
+  "title": "Test Note",
+  "content": "# Test\n\nThis is a test note.",
+  "date": "2025-07-03"
+}'
+test_endpoint "📥 Process Inbox note" PATCH http://localhost:5000/api/inbox/notes/2025-07-03_test-note.md '{
+  "action": "process",
+  "metadata": {
+    "title": "Test Note",
+    "date": "2025-07-03",
+    "tags": ["test"],
+    "summary": "A test note"
+  }
+}'
 
 # Knowledge Base Notes
 test_endpoint "📚 List KB notes" GET http://localhost:5000/api/kb/notes
-test_endpoint "📚 List KB subfolder" GET http://localhost:5000/api/kb/notes/folder?folder=2025-06
-test_endpoint "📚 Download KB note" GET http://localhost:5000/api/kb/notes/2025-06-30_MinhaNota.md
+test_endpoint "📚 List KB folders" GET http://localhost:5000/api/kb/folders
+test_endpoint "📚 Get KB note" GET http://localhost:5000/api/kb/notes/2025-07-03_test-note.md
 
 # Cleanup
 echo -e "\n🛑 Stopping Flask (PID $FLASK_PID)"
