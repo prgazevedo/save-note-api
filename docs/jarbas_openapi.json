@@ -26,8 +26,8 @@
     }
   ],
   "paths": {
-    "/api/scan_inbox": {
-      "post": {
+    "/api/inbox/files": {
+      "get": {
         "operationId": "scan_inbox",
         "summary": "Scan Dropbox Inbox",
         "description": "Lists Markdown files in the Inbox folder",
@@ -52,7 +52,7 @@
         }
       }
     },
-    "/api/get_inbox_note": {
+    "/api/inbox/notes/{filename}": {
       "get": {
         "operationId": "get_inbox_note",
         "summary": "Read Inbox Note Content",
@@ -60,7 +60,7 @@
         "parameters": [
           {
             "name": "filename",
-            "in": "query",
+            "in": "path",
             "required": true,
             "schema": { "type": "string" }
           }
@@ -83,20 +83,27 @@
         }
       }
     },
-    "/api/process_note": {
+    "/api/inbox/notes/{filename}/process": {
       "post": {
         "operationId": "process_note",
         "summary": "Inject YAML and Archive",
         "description": "Adds GPT-generated metadata to an existing note in the Inbox and archives it in structured KB folder.",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["filename", "yaml"],
+                "required": ["yaml"],
                 "properties": {
-                  "filename": { "type": "string" },
                   "yaml": {
                     "type": "object",
                     "properties": {
@@ -125,7 +132,7 @@
         }
       }
     },
-    "/api/save_note": {
+    "/api/inbox/notes": {
       "post": {
         "operationId": "save_note_to_dropbox",
         "summary": "Save complete Markdown",
