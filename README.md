@@ -4,7 +4,9 @@
 [![Staging Tests](https://github.com/prgazevedo/save-note-api/actions/workflows/test_staging_api.yml/badge.svg)](https://github.com/prgazevedo/save-note-api/actions/workflows/test_staging_api.yml)
 
 ---
-**SaveNotesGPT** transforms your raw notes into a structured, searchable personal knowledge base using AI-generated metadata. Drop in handwritten notes, thoughts, or Obsidian files — GPT enhances them with tags, summaries, and organization.
+**SaveNotesGPT** transforms your raw notes into a structured, searchable personal knowledge base using AI-generated metadata. 
+
+Drop in handwritten notes, thoughts, or Obsidian files — GPT enhances them with tags, summaries, and organization.
 ---
 ## 🔄 How It Works
 
@@ -237,6 +239,8 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 ## 📜 Version History
 
+- **v3.1.0** - API refactor with improved Swagger docs and route organization
+- **v3.0.0** - API GPT Actions Auth integration (Bearer token)
 - **v2.0.0** - RESTful API redesign, Obsidian support, GPT Actions integration
 - **v1.0.0** - Initial release with basic note processing
 

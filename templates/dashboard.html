@@ -45,7 +45,7 @@
     <!-- 📥 Scan Inbox Form -->
     <div class="mb-5">
       <h4>📥 Inbox Management</h4>
-      <form method="POST" action="{{ url_for('scan.scan_inbox') }}">
+      <form method="POST" action="{{ url_for('admin.dashboard') }}">
         <button type="submit" name="scan_inbox" class="btn btn-outline-secondary">Scan Inbox</button>
         {% if config.last_scan %}
           <div class="form-text mt-2 text-muted">
