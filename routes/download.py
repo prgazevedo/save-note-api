@@ -45,7 +45,7 @@ def get_kb_note(filename):
                       example: "2025-07-03_meeting-notes.md"
                     content:
                       type: string
-                      example: "---\ntitle: Weekly Team Meeting\ndate: 2025-07-03\ntags: [meeting, work]\n---\n\n# Meeting Notes\n\nDiscussed project timeline..."
+                      example: "example"
                     content_type:
                       type: string
                       example: "text/markdown"

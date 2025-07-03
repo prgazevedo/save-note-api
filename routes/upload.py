@@ -50,7 +50,7 @@ def create_inbox_note():
                 description: "Date for the note (defaults to today if not provided)"
               content:
                 type: string
-                example: "# Meeting Ideas\n\n- Discuss Q4 roadmap\n- Review team capacity"
+                example: "example"
                 description: "Raw Markdown content of the note"
               source:
                 type: string
@@ -61,13 +61,13 @@ def create_inbox_note():
               summary: Quick idea capture
               value:
                 title: "Project Brainstorm"
-                content: "# Ideas for new feature\n\n- User authentication\n- Real-time sync\n- Mobile app"
+                content: "Content"
             handwritten_note:
               summary: Handwritten note upload
               value:
                 title: "Meeting Notes"
                 date: "2025-07-03"
-                content: "# Team Meeting\n\nAttendees: John, Sarah, Mike\n\nDiscussed:\n- Q4 planning\n- Budget review"
+                content: "Content"
                 source: "handwritten"
     responses:
       201:
@@ -229,7 +229,7 @@ def create_kb_note():
                 example: "2025-07-03"
               content:
                 type: string
-                example: "---\ntitle: Quarterly Review Summary\ndate: 2025-07-03\ntags: [review, quarterly]\n---\n\n# Q3 Review\n\nKey achievements..."
+                example: "example"
                 description: "Complete Markdown content with YAML frontmatter"
               metadata:
                 type: object
@@ -249,7 +249,7 @@ def create_kb_note():
               value:
                 title: "Project Retrospective"
                 date: "2025-07-03"
-                content: "---\ntitle: Project Retrospective\ndate: 2025-07-03\ntags: [retrospective, project]\nauthor: team\nsummary: Post-project analysis and lessons learned\n---\n\n# Project Retrospective\n\n## What went well\n- Great team collaboration\n\n## What could improve\n- Earlier stakeholder involvement"
+                content: "Content"
     responses:
       201:
         description: Note created successfully in Knowledge Base
