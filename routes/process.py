@@ -25,7 +25,6 @@ def process_inbox_note(filename):
       2. Detecting and copying linked files (Obsidian support)
       3. Updating link paths in the note content
       4. Moving the processed note to the appropriate KB folder
-      
       This is the core transformation step in the knowledge management pipeline.
     parameters:
       - name: filename
