@@ -2,7 +2,7 @@ name: Mock API Test
 
 on:
   push:
-    branches: [main, refactor_api]
+    branches: [main, refactor_api2]
 
 jobs:
   mock-test:
