@@ -1,6 +1,7 @@
-# routes/download.py - Notes content retrieval
+# routes/download.py - Refactored to use inbox_utils and existing services
 
 from flask import Blueprint, jsonify
+from utils.inbox_utils import get_inbox_note_content, validate_inbox_note_filename
 from services.dropbox_client import download_note_from_dropbox
 from utils.logging_utils import log
 from utils.token_utils import require_token
@@ -45,7 +46,7 @@ def get_kb_note(filename):
                       example: "2025-07-03_meeting-notes.md"
                     content:
                       type: string
-                      example: "example"
+                      example: "---\ntitle: Meeting Notes\n---\n\n# Meeting Content"
                     content_type:
                       type: string
                       example: "text/markdown"
@@ -57,32 +58,11 @@ def get_kb_note(filename):
                       example: true
       404:
         description: Note not found in Knowledge Base
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                status:
-                  type: string
-                  example: error
-                message:
-                  type: string
-                  example: "Note not found in Knowledge Base"
       500:
         description: Error accessing Dropbox
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                status:
-                  type: string
-                  example: error
-                message:
-                  type: string
-                  example: "Failed to retrieve note from storage"
     """
     try:
+        # Use existing service for KB notes (no change needed here)
         content = download_note_from_dropbox(filename)
         if not content:
             log(f"📚 KB note not found: {filename}", level="warning")
@@ -120,7 +100,12 @@ def get_inbox_note(filename):
     tags:
       - Inbox Notes
     summary: Get raw inbox note content
-    description: Retrieve the raw content of an unprocessed note from the Inbox. These notes typically lack YAML frontmatter and await GPT processing to add metadata.
+    description: |
+      Retrieve the raw content of an unprocessed note from the Inbox. These notes typically 
+      lack YAML frontmatter and await GPT processing to add metadata.
+      
+      REFACTORED: Now uses utils.inbox_utils.get_inbox_note_content() for better code reuse
+      between Push and Pull modes, but maintains the same API contract.
     parameters:
       - name: filename
         in: path
@@ -161,6 +146,29 @@ def get_inbox_note(filename):
                     processing_status:
                       type: string
                       example: "unprocessed"
+      400:
+        description: Invalid filename format
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: error
+                message:
+                  type: string
+                  example: "Invalid filename format"
+      401:
+        description: Missing or invalid Bearer token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: "Invalid token"
       404:
         description: Note not found in Inbox
         content:
@@ -189,15 +197,22 @@ def get_inbox_note(filename):
                   example: "Failed to retrieve note from storage"
     """
     try:
-        content = download_note_from_dropbox(filename, folder="Inbox")
+        # Validate filename
+        if not validate_inbox_note_filename(filename):
+            return jsonify({
+                "status": "error",
+                "message": "Invalid filename format"
+            }), 400
+        
+        # Use the extracted utility function
+        content = get_inbox_note_content(filename)
+        
         if not content:
-            log(f"📥 Inbox note not found: {filename}", level="warning")
             return jsonify({
                 "status": "error", 
                 "message": "Note not found in Inbox"
             }), 404
 
-        log(f"📥 Retrieved inbox note: {filename}")
         return jsonify({
             "status": "success",
             "note": {

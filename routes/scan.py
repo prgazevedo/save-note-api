@@ -1,9 +1,9 @@
 # routes/scan.py - Notes-focused inbox scanning
 
 from flask import Blueprint, request, jsonify
-from utils.config_utils import load_config, save_config, save_last_files
+from utils.inbox_utils import scan_inbox_for_notes
+from utils.config_utils import load_config, save_config, save_last_files  # Keep original functions
 from utils.logging_utils import log
-from services.dropbox_client import list_folder
 from utils.token_utils import require_token
 from datetime import datetime, timezone
 
@@ -19,7 +19,12 @@ def list_inbox_notes():
     tags:
       - Inbox Notes
     summary: List Inbox Notes
-    description: Returns raw notes in the Dropbox Inbox that haven't been processed with metadata yet. These are candidates for GPT processing.
+    description: |
+      Returns raw notes in the Dropbox Inbox that haven't been processed with metadata yet. 
+      These are candidates for GPT processing.
+      
+      REFACTORED: Now uses utils.inbox_utils.scan_inbox_for_notes() for better code reuse
+      between Push and Pull modes, but maintains the same API contract and behavior.
     parameters:
       - name: status
         in: query
@@ -64,7 +69,7 @@ def list_inbox_notes():
                         example: "2025-07-03_meeting-ideas.md"
                       title:
                         type: string
-                        example: "meeting-ideas"
+                        example: "meeting ideas"
                       status:
                         type: string
                         example: "unprocessed"
@@ -93,8 +98,31 @@ def list_inbox_notes():
                     has_more:
                       type: boolean
                       example: false
+      400:
+        description: Invalid query parameters
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: error
+                message:
+                  type: string
+                  example: "Invalid query parameters"
+      401:
+        description: Missing or invalid Bearer token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                  example: "Invalid token"
       500:
-        description: Error accessing Dropbox
+        description: Error accessing Dropbox or internal server error
         content:
           application/json:
             schema:
@@ -108,71 +136,45 @@ def list_inbox_notes():
                   example: "Dropbox connection failed"
     """
     try:
-        # Get query parameters with validation
+        # Get query parameters with validation (same as original)
         status = request.args.get('status', 'all')
         limit = min(int(request.args.get('limit', 50)), 100)  # Cap at 100
         offset = max(int(request.args.get('offset', 0)), 0)   # No negative offset
         
-        config = load_config()
-        inbox_path = config.get("inbox_path")
+        # NEW: Use the extracted utility function instead of duplicating the logic
+        scan_result = scan_inbox_for_notes(limit=limit, offset=offset)
         
-        # Get raw entries from Dropbox
-        entries = list_folder(inbox_path)
+        notes = scan_result["notes"]
+        total = scan_result["total"]
+        has_more = scan_result["has_more"]
         
-        # Transform to notes with meaningful metadata
-        notes = []
-        for item in entries:
-            if item[".tag"] == "file" and item["name"].endswith(".md"):
-                # Extract title from filename (remove date prefix and extension)
-                filename = item["name"]
-                title = filename.replace('.md', '')
-                if '_' in title:
-                    # Remove date prefix like "2025-07-03_"
-                    parts = title.split('_', 1)
-                    if len(parts) > 1 and parts[0].count('-') == 2:
-                        title = parts[1]
-                
-                notes.append({
-                    "filename": filename,
-                    "title": title.replace('_', ' ').replace('-', ' '),
-                    "status": "unprocessed",  # All inbox notes are unprocessed
-                    "created": item.get("client_modified"),
-                    "size": item.get("size"),
-                    "path": f"/api/inbox/notes/{filename}"
-                })
-        
-        # Apply status filter (currently all inbox notes are unprocessed)
+        # Apply status filter (same as original - currently all inbox notes are unprocessed)
         if status == "unprocessed":
             # No filtering needed since all inbox notes are unprocessed
             pass
         
-        # Sort by creation date (newest first)
-        notes.sort(key=lambda x: x.get("created", ""), reverse=True)
-        
-        # Apply pagination
-        total = len(notes)
-        paginated_notes = notes[offset:offset + limit]
-        
-        # Update scan timestamp and save file list
+        # KEEP ORIGINAL BEHAVIOR: Update scan timestamp and save file list
+        config = load_config()
         config["last_scan"] = datetime.now(timezone.utc).isoformat()
         save_config(config)
-        save_last_files([note["filename"] for note in paginated_notes])
+        save_last_files([note["filename"] for note in notes])  # Use original function name
         
-        log(f"📥 Listed {len(paginated_notes)} inbox notes (total: {total})")
+        log(f"📥 Listed {len(notes)} inbox notes (total: {total})")
         
+        # SAME RETURN FORMAT as original
         return jsonify({
             "status": "success",
-            "notes": paginated_notes,
+            "notes": notes,
             "pagination": {
                 "total": total,
                 "limit": limit,
                 "offset": offset,
-                "has_more": offset + limit < total
+                "has_more": has_more
             }
         }), 200
         
     except ValueError as e:
-        # Handle invalid query parameters
+        # Handle invalid query parameters (same as original)
         log(f"❌ Invalid query parameters: {str(e)}", level="error")
         return jsonify({"status": "error", "message": "Invalid query parameters"}), 400
         
@@ -181,5 +183,5 @@ def list_inbox_notes():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# Export for app.py
+# Export for app.py (same as original)
 inbox_notes_routes = inbox_notes_bp
